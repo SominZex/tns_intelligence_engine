@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+httpx
+pydantic-settings
+python-dotenv
+psycopg[binary,pool]
+pwdlib[argon2]>=0.2.0

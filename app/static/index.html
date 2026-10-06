@@ -1,0 +1,3754 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>TNS Retail Intelligence</title>
+
+    <link rel="icon" type="image/jpeg" href="https://admin.thenewshop.in/static/media/New%20Logo%20.ad69756dd0621a9db47a.jpg">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #f5f7fb;
+            color: #172033;
+        }
+
+        button,
+        input,
+        textarea {
+            font: inherit;
+        }
+
+        /* =====================================================
+           APP
+           ===================================================== */
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* =====================================================
+           SIDEBAR
+           ===================================================== */
+
+        .sidebar {
+            width: 270px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            background: #111827;
+            color: white;
+
+            border-right: 1px solid #1f2937;
+        }
+
+        .sidebar-header {
+            padding: 18px;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: white;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .brand-icon img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: inherit;
+        }
+
+        .sidebar-brand-name {
+            font-size: 16px;
+            font-weight: 650;
+        }
+
+        .new-chat-button {
+            width: 100%;
+            padding: 10px 12px;
+
+            border: 1px solid #374151;
+            border-radius: 9px;
+
+            background: #1f2937;
+            color: white;
+
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .new-chat-button:hover {
+            background: #374151;
+        }
+
+        .new-chat-button span {
+            margin-right: 7px;
+            font-size: 16px;
+        }
+
+        .history-title {
+            padding: 0 18px 8px;
+
+            color: #9ca3af;
+
+            font-size: 11px;
+            font-weight: 600;
+
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px 15px;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            width: 100%;
+            padding: 9px 9px;
+
+            margin-bottom: 2px;
+
+            border: none;
+            border-radius: 8px;
+
+            background: transparent;
+            color: #d1d5db;
+
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .chat-item:hover {
+            background: #1f2937;
+        }
+
+        .chat-item.active {
+            background: #374151;
+            color: white;
+        }
+
+        .chat-item-title {
+            flex: 1;
+
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            font-size: 13px;
+        }
+
+        .delete-chat-button {
+            width: 24px;
+            height: 24px;
+
+            flex-shrink: 0;
+
+            border: none;
+            border-radius: 6px;
+
+            background: transparent;
+            color: #9ca3af;
+
+            cursor: pointer;
+
+            opacity: 0;
+        }
+
+        .chat-item:hover .delete-chat-button {
+            opacity: 1;
+        }
+
+        .delete-chat-button:hover {
+            background: #4b5563;
+            color: white;
+        }
+
+        .sidebar-footer {
+            padding: 14px 18px;
+
+            border-top: 1px solid #1f2937;
+        }
+
+        .sidebar-user {
+            margin-bottom: 10px;
+
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .logout-button {
+            width: 100%;
+
+            padding: 8px 10px;
+
+            border: 1px solid #374151;
+            border-radius: 8px;
+
+            background: transparent;
+            color: #d1d5db;
+
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .logout-button:hover {
+            background: #1f2937;
+        }
+
+        /* =====================================================
+           MAIN
+           ===================================================== */
+
+        .main-area {
+            margin-left: 270px;
+
+            min-height: 100vh;
+            width: calc(100% - 270px);
+
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            height: 60px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 25px;
+
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .header-subtitle {
+            margin-top: 2px;
+
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        /* =====================================================
+           CHAT AREA
+           ===================================================== */
+
+        .main {
+            width: 100%;
+            max-width: 950px;
+
+            margin: 0 auto;
+
+            flex: 1;
+
+            display: flex;
+            flex-direction: column;
+
+            padding: 25px 20px 18px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin: auto 0;
+        }
+
+        .welcome h1 {
+            margin: 0 0 10px;
+
+            font-size: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        .welcome p {
+            margin: 0;
+
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+
+            padding-bottom: 20px;
+        }
+
+        .message-row {
+            width: 100%;
+            display: flex;
+        }
+
+        .message-row.user {
+            justify-content: flex-end;
+        }
+
+        .message-row.assistant {
+            justify-content: flex-start;
+        }
+
+        .message {
+            max-width: 78%;
+
+            padding: 13px 16px;
+
+            border-radius: 14px;
+
+            line-height: 1.55;
+            font-size: 14px;
+
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .message.user {
+            background: #111827;
+            color: white;
+
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: white;
+            color: #1f2937;
+
+            border: 1px solid #e5e7eb;
+
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.error {
+            background: #fff7f7;
+            color: #b42318;
+
+            border: 1px solid #fecdca;
+        }
+
+
+        /* =====================================================
+           RICH GENIE RESPONSE
+           ===================================================== */
+
+        .assistant-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .answer-text {
+            line-height: 1.6;
+        }
+
+        .answer-text p {
+            margin: 0 0 9px;
+        }
+
+        .answer-text p:last-child {
+            margin-bottom: 0;
+        }
+
+        .answer-text ul,
+        .answer-text ol {
+            margin: 7px 0 7px 20px;
+            padding: 0;
+        }
+
+        .answer-text strong {
+            font-weight: 700;
+        }
+
+        .result-card {
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 11px 13px;
+            border-bottom: 1px solid #eef0f3;
+        }
+
+        .result-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .result-meta {
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .result-button {
+            border: 1px solid #d1d5db;
+            background: #fff;
+            color: #374151;
+            border-radius: 7px;
+            padding: 6px 9px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .result-button:hover {
+            background: #f9fafb;
+        }
+
+        .result-table-wrap {
+            max-width: 100%;
+            overflow: auto;
+        }
+
+        .result-table {
+            width: 100%;
+            min-width: 420px;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .result-table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .result-table th,
+        .result-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eef0f3;
+            white-space: nowrap;
+        }
+
+        .result-table tr:last-child td {
+            border-bottom: 0;
+        }
+
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        .suggestion-button {
+            border: 1px solid #dbe1e8;
+            background: #f8fafc;
+            color: #374151;
+            border-radius: 999px;
+            padding: 7px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .suggestion-button:hover {
+            background: #f1f5f9;
+        }
+
+        /* =====================================================
+           TYPING
+           ===================================================== */
+
+        .typing {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 15px 18px;
+        }
+
+        .typing span {
+            width: 6px;
+            height: 6px;
+
+            border-radius: 50%;
+
+            background: #9ca3af;
+
+            animation: pulse 1.2s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            60%,
+            100% {
+                opacity: 0.3;
+            }
+
+            30% {
+                opacity: 1;
+            }
+        }
+
+        /* =====================================================
+           COMPOSER
+           ===================================================== */
+
+        .composer-wrapper {
+            position: sticky;
+            bottom: 0;
+
+            padding-top: 12px;
+
+            background:
+                linear-gradient(
+                    to bottom,
+                    rgba(245, 247, 251, 0),
+                    #f5f7fb 20%
+                );
+        }
+
+        .composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+
+            padding: 10px;
+
+            background: white;
+
+            border: 1px solid #d1d5db;
+            border-radius: 14px;
+
+            box-shadow:
+                0 4px 15px rgba(
+                    0,
+                    0,
+                    0,
+                    0.05
+                );
+        }
+
+        .composer textarea {
+            flex: 1;
+
+            resize: none;
+
+            min-height: 44px;
+            max-height: 150px;
+
+            padding: 11px 10px;
+
+            border: none;
+            outline: none;
+
+            background: transparent;
+
+            color: #111827;
+
+            line-height: 1.4;
+        }
+
+        .send-button {
+            width: 44px;
+            height: 44px;
+
+            flex-shrink: 0;
+
+            border: none;
+            border-radius: 10px;
+
+            background: #111827;
+            color: white;
+
+            cursor: pointer;
+
+            font-size: 18px;
+        }
+
+        .send-button:hover {
+            background: #1f2937;
+        }
+
+        .send-button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .footer-note {
+            text-align: center;
+
+            padding: 9px 0 0;
+
+            color: #9ca3af;
+
+            font-size: 10px;
+        }
+
+        /* =====================================================
+           LOGIN
+           ===================================================== */
+
+        .login-screen {
+            min-height: 100vh;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            background: #f5f7fb;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+
+            padding: 32px;
+
+            background: white;
+
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+
+            box-shadow:
+                0 15px 40px rgba(
+                    0,
+                    0,
+                    0,
+                    0.07
+                );
+        }
+
+        .login-brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .login-brand .brand-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 14px;
+
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .login-brand h1 {
+            margin: 0 0 7px;
+            font-size: 24px;
+        }
+
+        .login-brand p {
+            margin: 0;
+
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 17px;
+        }
+
+        .form-group label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            color: #374151;
+        }
+
+        .form-group input {
+            width: 100%;
+
+            padding: 11px 12px;
+
+            border: 1px solid #d1d5db;
+            border-radius: 9px;
+
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #6b7280;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    107,
+                    114,
+                    128,
+                    0.12
+                );
+        }
+
+        .login-button {
+            width: 100%;
+
+            padding: 11px;
+
+            border: none;
+            border-radius: 9px;
+
+            background: #111827;
+            color: white;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+        .login-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .login-error {
+            margin-bottom: 16px;
+
+            padding: 10px 12px;
+
+            border-radius: 8px;
+
+            background: #fff7f7;
+
+            border: 1px solid #fecdca;
+
+            color: #b42318;
+
+            font-size: 13px;
+
+            display: none;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* =====================================================
+           MOBILE
+           ===================================================== */
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                width: 230px;
+            }
+
+            .main-area {
+                margin-left: 230px;
+                width: calc(100% - 230px);
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+        }
+
+
+        .result-description {
+            padding: 10px 13px 0;
+            color: #4b5563;
+            font-size: 12px;
+        }
+
+        .genie-sql {
+            margin: 0;
+            padding: 12px 14px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-size: 12px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .genie-visualization {
+            display: block;
+            width: 100%;
+            max-height: 700px;
+            object-fit: contain;
+            background: #111827;
+        }
+
+        .thoughts-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #fafafa;
+            overflow: hidden;
+        }
+
+        .thoughts-card summary {
+            cursor: pointer;
+            padding: 10px 13px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .thoughts-body {
+            border-top: 1px solid #e5e7eb;
+            padding: 10px 13px;
+        }
+
+        .thought-item {
+            display: grid;
+            grid-template-columns: 24px 1fr;
+            gap: 8px;
+            padding: 7px 0;
+            color: #4b5563;
+            font-size: 12px;
+        }
+
+        .thought-number {
+            font-weight: 700;
+        }
+
+
+        /* ---- Native charts (Chart.js) ---- */
+        .chart-wrap {
+            position: relative;
+            width: 100%;
+            padding: 12px 14px 4px;
+            background: #fff;
+        }
+
+        .chart-source {
+            padding: 4px 14px 10px;
+            color: #6b7280;
+            font-size: 11px;
+        }
+
+        .chart-data {
+            border-top: 1px solid #eef0f3;
+        }
+
+        .chart-data summary {
+            cursor: pointer;
+            padding: 9px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .chart-data .result-card {
+            border: 0;
+            border-radius: 0;
+        }
+
+        /* ---- Markdown tables in the report text ---- */
+        .md-table-wrap {
+            max-width: 100%;
+            overflow: auto;
+            margin: 8px 0 12px;
+        }
+
+        .md-table {
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 320px;
+        }
+
+        .md-table th,
+        .md-table td {
+            border: 1px solid #e5e7eb;
+            padding: 6px 10px;
+            text-align: left;
+        }
+
+        .md-table th {
+            background: #f9fafb;
+            font-weight: 700;
+        }
+
+        .answer-text sup.citation {
+            font-size: 10px;
+            margin-left: 1px;
+        }
+
+        .answer-text sup.citation a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 700;
+        }
+
+        .answer-text a {
+            color: #2563eb;
+        }
+
+        .result-table-wrap {
+            max-height: 440px;
+        }
+
+        .result-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f9fafb;
+        }
+
+        .md-table-actions {
+            display: flex;
+            gap: 7px;
+            margin-top: 8px;
+        }
+
+        .table-card-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .answer-text sup.citation a[data-cite-id] {
+            cursor: pointer;
+            padding: 0 2px;
+        }
+
+        .answer-text h1,
+        .answer-text h2,
+        .answer-text h3,
+        .answer-text h4 {
+            margin: 14px 0 6px;
+            line-height: 1.3;
+        }
+
+        .answer-text h3 {
+            font-size: 15px;
+        }
+
+        .thought-subheading {
+            margin: 10px 0 6px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .thought-table {
+            margin-bottom: 10px;
+        }
+
+    </style>
+
+    <!-- Chart.js renders the charts natively. If this CDN is unreachable
+         the app automatically falls back to the Genie PNG image. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <!-- SheetJS creates the .xlsx downloads. If unreachable, only the
+         CSV download button is shown. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     LOGIN SCREEN
+     ========================================================= -->
+
+<div
+    id="loginScreen"
+    class="login-screen"
+>
+
+    <div class="login-card">
+
+        <div class="login-brand">
+
+            <div class="brand-icon">
+                <img
+                    src="https://admin.thenewshop.in/static/media/New%20Logo%20.ad69756dd0621a9db47a.jpg"
+                    alt="The New Shop logo"
+                >
+            </div>
+
+            <h1>
+                TNS Retail Intelligence
+            </h1>
+
+            <p>
+                Sign in to access company analytics
+            </p>
+
+        </div>
+
+        <div
+            id="loginError"
+            class="login-error"
+        ></div>
+
+        <form id="loginForm">
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    id="username"
+                    type="text"
+                    autocomplete="username"
+                    required
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <input
+                    id="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                >
+
+            </div>
+
+            <button
+                id="loginButton"
+                class="login-button"
+                type="submit"
+            >
+                Sign in
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     CHAT APPLICATION
+     ========================================================= -->
+
+<div
+    id="chatScreen"
+    class="app hidden"
+>
+
+
+    <!-- =====================================================
+         SIDEBAR
+         ===================================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-header">
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+                    <img
+                        src="https://admin.thenewshop.in/static/media/New%20Logo%20.ad69756dd0621a9db47a.jpg"
+                        alt="The New Shop logo"
+                    >
+                </div>
+
+                <div class="sidebar-brand-name">
+                    TNS Retail Intelligence
+                </div>
+
+            </div>
+
+
+            <button
+                id="newChatButton"
+                class="new-chat-button"
+                type="button"
+            >
+
+                <span>
+                    +
+                </span>
+
+                New Chat
+
+            </button>
+
+        </div>
+
+
+        <div class="history-title">
+            Conversations
+        </div>
+
+
+        <div
+            id="chatList"
+            class="chat-list"
+        ></div>
+
+
+        <div class="sidebar-footer">
+
+            <div
+                id="sidebarUser"
+                class="sidebar-user"
+            ></div>
+
+            <button
+                id="logoutButton"
+                class="logout-button"
+                type="button"
+            >
+                Logout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN AREA
+         ===================================================== -->
+
+    <section class="main-area">
+
+
+        <header class="header">
+
+            <div>
+
+                <div
+                    id="headerTitle"
+                    class="header-title"
+                >
+                    New Chat
+                </div>
+
+                <div class="header-subtitle">
+                    Business Intelligence Assistant
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <main class="main">
+
+
+            <div
+                id="welcome"
+                class="welcome"
+            >
+
+                <h1>
+                    How can I help you?
+                </h1>
+
+                <p>
+                    Ask questions about company sales,
+                    products, stores, brands and more.
+                </p>
+
+            </div>
+
+
+            <div
+                id="messages"
+                class="messages"
+            ></div>
+
+
+            <div class="composer-wrapper">
+
+                <form
+                    id="chatForm"
+                    class="composer"
+                >
+
+                    <textarea
+                        id="messageInput"
+                        placeholder="Ask a question..."
+                        rows="1"
+                        maxlength="5000"
+                    ></textarea>
+
+                    <button
+                        id="sendButton"
+                        class="send-button"
+                        type="submit"
+                    >
+                        ↑
+                    </button>
+
+                </form>
+
+
+                <div class="footer-note">
+                    TNS Retail Intelligence may occasionally make mistakes.
+                    Verify important business decisions.
+                </div>
+
+            </div>
+
+        </main>
+
+    </section>
+
+</div>
+
+
+<script>
+
+    // =========================================================
+    // STATE
+    // =========================================================
+
+    let chatSessionId = null;
+
+    let isSending = false;
+
+
+    // =========================================================
+    // DOM
+    // =========================================================
+
+    const loginScreen =
+        document.getElementById(
+            "loginScreen"
+        );
+
+    const chatScreen =
+        document.getElementById(
+            "chatScreen"
+        );
+
+    const loginForm =
+        document.getElementById(
+            "loginForm"
+        );
+
+    const loginButton =
+        document.getElementById(
+            "loginButton"
+        );
+
+    const loginError =
+        document.getElementById(
+            "loginError"
+        );
+
+    const usernameInput =
+        document.getElementById(
+            "username"
+        );
+
+    const passwordInput =
+        document.getElementById(
+            "password"
+        );
+
+    const sidebarUser =
+        document.getElementById(
+            "sidebarUser"
+        );
+
+    const logoutButton =
+        document.getElementById(
+            "logoutButton"
+        );
+
+    const newChatButton =
+        document.getElementById(
+            "newChatButton"
+        );
+
+    const chatList =
+        document.getElementById(
+            "chatList"
+        );
+
+    const headerTitle =
+        document.getElementById(
+            "headerTitle"
+        );
+
+    const messages =
+        document.getElementById(
+            "messages"
+        );
+
+    const welcome =
+        document.getElementById(
+            "welcome"
+        );
+
+    const chatForm =
+        document.getElementById(
+            "chatForm"
+        );
+
+    const messageInput =
+        document.getElementById(
+            "messageInput"
+        );
+
+    const sendButton =
+        document.getElementById(
+            "sendButton"
+        );
+
+
+    // =========================================================
+    // API
+    // =========================================================
+
+    function getCookie(name) {
+
+        const prefix =
+            name + "=";
+
+        const cookies =
+            document.cookie.split(";");
+
+        for (const cookie of cookies) {
+
+            const value =
+                cookie.trim();
+
+            if (value.startsWith(prefix)) {
+                return decodeURIComponent(
+                    value.slice(prefix.length)
+                );
+            }
+        }
+
+        return null;
+    }
+
+
+    async function ensureCsrfToken() {
+
+        const existingToken =
+            getCookie("csrf_token");
+
+        if (existingToken) {
+            return existingToken;
+        }
+
+        const response =
+            await fetch(
+                "/api/csrf",
+                {
+                    method: "GET",
+                    credentials: "same-origin",
+                }
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "Unable to initialize security token."
+            );
+        }
+
+        const data =
+            await response.json();
+
+        return data.csrf_token;
+    }
+
+
+    async function apiRequest(
+        url,
+        options = {}
+    ) {
+
+        const method =
+            (options.method || "GET").toUpperCase();
+
+        const requestOptions = {
+            credentials: "same-origin",
+            ...options,
+        };
+
+        if (
+            method !== "GET"
+            && method !== "HEAD"
+            && method !== "OPTIONS"
+        ) {
+
+            const csrfToken =
+                await ensureCsrfToken();
+
+            requestOptions.headers = {
+                ...(options.headers || {}),
+                "X-CSRF-Token": csrfToken,
+            };
+        }
+
+        const response =
+            await fetch(
+                url,
+                requestOptions
+            );
+
+
+        let data = null;
+
+
+        try {
+
+            data =
+                await response.json();
+
+        } catch {
+
+            data = null;
+
+        }
+
+
+        if (!response.ok) {
+
+            const error =
+                new Error(
+                    data?.detail
+                    || "Request failed."
+                );
+
+            error.status =
+                response.status;
+
+            error.retryAfter =
+                response.headers.get(
+                    "Retry-After"
+                );
+
+            throw error;
+        }
+
+
+        return data;
+    }
+
+
+    // =========================================================
+    // LOGIN SCREEN
+    // =========================================================
+
+    function showLogin() {
+
+        loginScreen.classList.remove(
+            "hidden"
+        );
+
+        chatScreen.classList.add(
+            "hidden"
+        );
+
+        usernameInput.focus();
+    }
+
+
+    function showChat(
+        username
+    ) {
+
+        loginScreen.classList.add(
+            "hidden"
+        );
+
+        chatScreen.classList.remove(
+            "hidden"
+        );
+
+        sidebarUser.textContent =
+            `Signed in as ${username}`;
+
+        messageInput.focus();
+    }
+
+
+    function showLoginError(
+        message
+    ) {
+
+        loginError.textContent =
+            message;
+
+        loginError.style.display =
+            "block";
+    }
+
+
+    function clearLoginError() {
+
+        loginError.textContent =
+            "";
+
+        loginError.style.display =
+            "none";
+    }
+
+
+    // =========================================================
+    // MESSAGE UI
+    // =========================================================
+
+    function clearMessages() {
+
+        messages.innerHTML =
+            "";
+
+        welcome.classList.remove(
+            "hidden"
+        );
+    }
+
+
+    // All amounts in this app are Indian Rupees. The agent sometimes writes
+    // "$" before an amount; show it as the rupee sign (also fixes old chats).
+    const CURRENCY_SYMBOL = "₹";
+
+    function escapeHtml(value) {
+
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+
+    function renderMarkdown(text) {
+
+        // Databricks citation directives, e.g.
+        //   [unrendered :citation[01f1c0d8-1050-129e-bb23-a4380a73bae4]]
+        // are shown by the Databricks UI as small numbered markers. Number
+        // them in order of first appearance; the same source keeps its number.
+        const citationIds = [];
+
+        function citationNumber(id) {
+            let index = citationIds.indexOf(id);
+            if (index === -1) {
+                citationIds.push(id);
+                index = citationIds.length - 1;
+            }
+            return index + 1;
+        }
+
+        // The agent sometimes glues a heading to the previous sentence
+        // ("Sales by Store### Top Performing Stores"). Put it on its own line.
+        const source = String(text ?? "")
+            .replace(
+                /\[unrendered\s+:citation\[([^\]]+)\]\]|:citation\[([^\]]+)\](?:\{[^}]*\})?/g,
+                (match, wrapped, bare) => {
+                    const id = String(wrapped || bare || "")
+                        .trim()
+                        .replace(/[^A-Za-z0-9_-]/g, "");
+                    return id
+                        ? `\u0001${citationNumber(id)}|${id}\u0001`
+                        : "";
+                }
+            )
+            // Any other directive the API could not render: never show it raw.
+            .replace(/\[unrendered\s+:[A-Za-z]+\[[^\]]*\]\]/g, "")
+            .replace(/\$(?=\s?\d)/g, CURRENCY_SYMBOL)
+            .replace(
+                /([A-Za-z0-9)\.:\]])(#{2,6})[ \t]+(?=[A-Z])/g,
+                "$1\n\n$2 "
+            );
+
+        const escaped = escapeHtml(source);
+
+        // Headings whose sentence follows with no line break, e.g.
+        // "Revenue TrendThe weekly revenue peaked..." -> heading + paragraph.
+        const gluedHeading =
+            /^(?:#{1,6}\s+)?((?:[A-Z][a-z]+ ){0,3}[A-Z][a-z]+)(?=[A-Z][a-z]+ [a-z])/;
+
+        const lines = escaped.split("\n").flatMap((raw) => {
+            const trimmed = raw.trim();
+            if (trimmed.length > 60 && !/^[|\-*\d]/.test(trimmed)) {
+                const match = trimmed.match(gluedHeading);
+                if (match && match[1].length <= 45) {
+                    const rest = trimmed.slice(
+                        trimmed.indexOf(match[1]) + match[1].length
+                    );
+                    return [`### ${match[1]}`, "", rest];
+                }
+            }
+            return [raw];
+        });
+
+        const output = [];
+        let paragraph = [];
+        let listType = null;
+
+        function flushParagraph() {
+            if (!paragraph.length) return;
+            output.push(`<p>${paragraph.join("<br>")}</p>`);
+            paragraph = [];
+        }
+
+        function closeList() {
+            if (!listType) return;
+            output.push(`</${listType}>`);
+            listType = null;
+        }
+
+        function inlineMarkdown(value) {
+            return value
+                // Databricks citation directive -> numbered superscript
+                .replace(
+                    /\u0001(\d+)\|([A-Za-z0-9_-]*)\u0001/g,
+                    '<sup class="citation"><a href="#" data-cite-id="$2" title="Show source">$1</a></sup>'
+                )
+                // Genie citation markers  \[[1](https://...)\]  -> superscript link
+                .replace(
+                    /\\?\[\[(\d+)\]\((https?:\/\/[^)\s]+)\)\\?\]/g,
+                    '<sup class="citation"><a href="$2" target="_blank" rel="noopener noreferrer">$1</a></sup>'
+                )
+                // Ordinary markdown links
+                .replace(
+                    /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+                    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+                )
+                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                .replace(/__(.+?)__/g, "<strong>$1</strong>")
+                .replace(/`([^`]+)`/g, "<code>$1</code>")
+                .replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        }
+
+        function splitTableRow(row) {
+            return row
+                .trim()
+                .replace(/^\|/, "")
+                .replace(/\|$/, "")
+                .split("|")
+                .map((cell) => cell.trim());
+        }
+
+        const separatorPattern =
+            /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/;
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            if (!line) {
+                flushParagraph();
+                closeList();
+                continue;
+            }
+
+            // GitHub-style markdown table
+            if (
+                line.startsWith("|")
+                && i + 1 < lines.length
+                && separatorPattern.test(lines[i + 1].trim())
+            ) {
+                flushParagraph();
+                closeList();
+
+                const head = splitTableRow(line);
+                const body = [];
+                i += 2;
+                while (i < lines.length && lines[i].trim().startsWith("|")) {
+                    body.push(splitTableRow(lines[i]));
+                    i += 1;
+                }
+                i -= 1;
+
+                output.push(
+                    '<div class="md-table-wrap"><table class="md-table"><thead><tr>'
+                    + head.map((c) => `<th>${inlineMarkdown(c)}</th>`).join("")
+                    + "</tr></thead><tbody>"
+                    + body
+                        .map((row) =>
+                            "<tr>"
+                            + row.map((c) => `<td>${inlineMarkdown(c)}</td>`).join("")
+                            + "</tr>"
+                        )
+                        .join("")
+                    + "</tbody></table></div>"
+                );
+                continue;
+            }
+
+            const heading = line.match(/^(#{1,6})\s+(.+)$/);
+            if (heading) {
+                flushParagraph();
+                closeList();
+                const level = Math.min(6, heading[1].length);
+                output.push(`<h${level}>${inlineMarkdown(heading[2])}</h${level}>`);
+                continue;
+            }
+
+            const unordered = line.match(/^[-*]\s+(.+)$/);
+            const ordered = line.match(/^\d+[.)]\s+(.+)$/);
+
+            if (unordered || ordered) {
+                flushParagraph();
+                const desired = unordered ? "ul" : "ol";
+                if (listType !== desired) {
+                    closeList();
+                    output.push(`<${desired}>`);
+                    listType = desired;
+                }
+                output.push(`<li>${inlineMarkdown((unordered || ordered)[1])}</li>`);
+                continue;
+            }
+
+            closeList();
+            paragraph.push(inlineMarkdown(line));
+        }
+
+        flushParagraph();
+        closeList();
+
+        return output.join("") || "<p></p>";
+    }
+
+
+    function normalizeSourceId(id) {
+        return String(id || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    }
+
+
+    // Clicking a citation number opens and highlights the chart / table
+    // whose query it refers to (when that query is part of this answer).
+    function wireCitationLinks(root, scope) {
+
+        root.querySelectorAll("a[data-cite-id]").forEach((link) => {
+
+            const id = normalizeSourceId(link.dataset.citeId);
+
+            link.addEventListener("click", (event) => {
+                event.preventDefault();
+
+                const target = id
+                    ? scope.querySelector(`[data-source-ids~="${id}"]`)
+                    : null;
+
+                if (!target) return;
+
+                let node = target;
+                while (node && node !== scope) {
+                    if (node.tagName === "DETAILS") node.open = true;
+                    node = node.parentElement;
+                }
+
+                target.querySelectorAll("details.chart-data")
+                    .forEach((details) => { details.open = true; });
+
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+                target.style.outline = "2px solid #2563eb";
+                setTimeout(() => { target.style.outline = ""; }, 1800);
+            });
+        });
+    }
+
+
+    function normalizeColumnName(columnName) {
+
+        return String(columnName || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+    }
+
+
+    function isNumericValue(value) {
+
+        if (value === null || value === undefined || value === "") {
+            return false;
+        }
+
+        const text = String(value).trim();
+
+        // Accept normal decimal numbers and scientific notation.
+        return /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text)
+            && Number.isFinite(Number(text));
+    }
+
+
+    function isQuantityColumn(columnName) {
+
+        const name = normalizeColumnName(columnName);
+
+        return (
+            name === "quantity" ||
+            name.includes("quantity") ||
+            name === "qty" ||
+            name.includes("qty") ||
+            name.includes("units") ||
+            name.includes("unitcount") ||
+            name.includes("itemcount") ||
+            name.includes("productcount") ||
+            name.includes("skucount") ||
+            name.includes("ordercount") ||
+            name.includes("storecount") ||
+            name.includes("customercount") ||
+            name.endsWith("count")
+        );
+    }
+
+
+    function isPercentageColumn(columnName) {
+
+        const name = normalizeColumnName(columnName);
+
+        return (
+            name.includes("percent") ||
+            name.includes("percentage") ||
+            name.endsWith("pct") ||
+            name.includes("rate") ||
+            name.includes("margin")
+        );
+    }
+
+
+    function isCurrencyColumn(columnName) {
+
+        const name = normalizeColumnName(columnName);
+
+        // Quantity/count columns are NEVER currency, even if their name
+        // happens to contain a word such as "sales".
+        if (isQuantityColumn(columnName)) {
+            return false;
+        }
+
+        if (isPercentageColumn(columnName)) {
+            return false;
+        }
+
+        // Currency is based on semantic financial field names, not simply
+        // because the value happens to be numeric.
+        return (
+            name.includes("revenue") ||
+            name.includes("sales") ||
+            name.includes("mrp") ||
+            name.includes("amount") ||
+            name.includes("price") ||
+            name.includes("cost") ||
+            name.includes("profit") ||
+            name.includes("salesvalue") ||
+            name.includes("salesamount") ||
+            name.includes("gmv") ||
+            name.includes("turnover") ||
+            name.includes("discount") ||
+            name.includes("deliveryfee") ||
+            name.includes("taxamount") ||
+            name.includes("netamount") ||
+            name.includes("grossamount")
+        );
+    }
+
+
+    function formatIndianCurrency(value) {
+
+        const number = Number(value);
+
+        if (!Number.isFinite(number)) {
+            return String(value);
+        }
+
+        const absolute = Math.abs(number);
+        const sign = number < 0 ? "-" : "";
+
+        if (absolute >= 10000000) {
+            return `${sign}₹${(absolute / 10000000).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })} Cr`;
+        }
+
+        if (absolute >= 100000) {
+            return `${sign}₹${(absolute / 100000).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            })} L`;
+        }
+
+        return `${sign}₹${absolute.toLocaleString("en-IN", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2,
+        })}`;
+    }
+
+
+    function formatCell(value, columnName = "") {
+
+        if (value === null || value === undefined || value === "") {
+            return "—";
+        }
+
+        const text = String(value).trim();
+
+        if (!isNumericValue(text)) {
+            return String(value);
+        }
+
+        if (isQuantityColumn(columnName)) {
+            return Number(text).toLocaleString("en-IN", {
+                maximumFractionDigits: 2,
+            });
+        }
+
+        if (isPercentageColumn(columnName)) {
+            return `${Number(text).toLocaleString("en-IN", {
+                maximumFractionDigits: 2,
+            })}%`;
+        }
+
+        if (isCurrencyColumn(columnName)) {
+            return formatIndianCurrency(text);
+        }
+
+        return Number(text).toLocaleString("en-IN", {
+            maximumFractionDigits: 2,
+        });
+    }
+
+
+    async function downloadFullResult(table) {
+
+        const button = table.__downloadButton;
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Preparing CSV…";
+        }
+
+        try {
+            // The server fetches the signed Databricks file and returns it as
+            // text/csv, so the browser saves a real .csv file.
+            const csvUrl = String(table.download_url || "")
+                .replace(/\/download$/, "/file.csv");
+
+            const response = await fetch(csvUrl, {
+                credentials: "same-origin",
+            });
+
+            if (!response.ok) {
+                let detail = null;
+                try {
+                    detail = (await response.json()).detail;
+                } catch {
+                    detail = null;
+                }
+                throw new Error(detail || "Unable to download the query result.");
+            }
+
+            const blob = await response.blob();
+
+            downloadBlob(
+                new Blob([blob], { type: "text/csv;charset=utf-8" }),
+                `${fileSafeName(table.title || "genie-result")}-full.csv`
+            );
+        } catch (error) {
+            alert(error.message || "Unable to download the query result.");
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.textContent = button.dataset.label || "Download CSV";
+            }
+        }
+    }
+
+
+    // =========================================================
+    // TABLE DOWNLOADS (CSV / Excel) - generated in the browser from the
+    // exact rows shown on screen, so they work instantly and offline.
+    // =========================================================
+
+    function fileSafeName(value) {
+
+        const name = String(value || "table")
+            .replace(/[\\/:*?"<>|]+/g, " ")
+            .replace(/\s+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 80);
+
+        return name || "table";
+    }
+
+
+    function csvEscape(value) {
+
+        if (value === null || value === undefined) return "";
+
+        const text = String(value);
+
+        return /[",\r\n]/.test(text)
+            ? `"${text.replace(/"/g, '""')}"`
+            : text;
+    }
+
+
+    function downloadBlob(blob, filename) {
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+    }
+
+
+    function downloadTableCsv(columns, rows, baseName) {
+
+        const lines = [columns, ...rows].map(
+            (row) => row.map(csvEscape).join(",")
+        );
+
+        // The BOM makes Excel open UTF-8 (₹ etc.) correctly.
+        downloadBlob(
+            new Blob(["\ufeff" + lines.join("\r\n")], {
+                type: "text/csv;charset=utf-8",
+            }),
+            `${baseName}.csv`
+        );
+    }
+
+
+    // Turn numeric-looking text into real numbers for Excel, but never
+    // damage identifiers such as "00123" or very long digit strings.
+    function coerceExcelCell(value, allowFormatted = false) {
+
+        if (value === null || value === undefined || value === "") return "";
+
+        const text = String(value).trim();
+
+        let candidate = text;
+        if (allowFormatted) {
+            candidate = text.replace(/^₹\s?/, "").replace(/,/g, "");
+        }
+
+        if (
+            isNumericValue(candidate)
+            && !/^[+-]?0\d/.test(candidate)
+            && candidate.replace(/\D/g, "").length <= 15
+        ) {
+            return Number(candidate);
+        }
+
+        return value;
+    }
+
+
+    function downloadTableExcel(columns, rows, baseName, allowFormatted = false) {
+
+        if (typeof XLSX === "undefined") {
+            downloadTableCsv(columns, rows, baseName);
+            return;
+        }
+
+        const data = rows.map(
+            (row) => row.map((cell) => coerceExcelCell(cell, allowFormatted))
+        );
+
+        const sheet = XLSX.utils.aoa_to_sheet([columns, ...data]);
+        const book = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(
+            book,
+            sheet,
+            baseName.replace(/[\\/?*\[\]:]/g, "").slice(0, 31) || "Sheet1"
+        );
+        XLSX.writeFile(book, `${baseName}.xlsx`);
+    }
+
+
+    function makeDownloadButtons(columns, rows, baseName, allowFormatted = false) {
+
+        const buttons = [];
+
+        const csv = document.createElement("button");
+        csv.type = "button";
+        csv.className = "result-button";
+        csv.textContent = "Download CSV";
+        csv.addEventListener(
+            "click",
+            () => downloadTableCsv(columns, rows, baseName)
+        );
+        buttons.push(csv);
+
+        if (typeof XLSX !== "undefined") {
+            const excel = document.createElement("button");
+            excel.type = "button";
+            excel.className = "result-button";
+            excel.textContent = "Download Excel";
+            excel.addEventListener(
+                "click",
+                () => downloadTableExcel(columns, rows, baseName, allowFormatted)
+            );
+            buttons.push(excel);
+        }
+
+        return buttons;
+    }
+
+
+    // Add CSV/Excel buttons above every markdown table in the report text.
+    function enhanceMarkdownTables(root) {
+
+        root.querySelectorAll(".md-table-wrap").forEach((wrap, index) => {
+
+            const table = wrap.querySelector("table");
+            if (!table || wrap.previousElementSibling?.classList.contains("md-table-actions")) {
+                return;
+            }
+
+            const columns = [...table.querySelectorAll("thead th")]
+                .map((th) => th.textContent.trim());
+            const rows = [...table.querySelectorAll("tbody tr")]
+                .map((tr) => [...tr.children].map((td) => td.textContent.trim()));
+
+            const bar = document.createElement("div");
+            bar.className = "md-table-actions";
+            makeDownloadButtons(
+                columns,
+                rows,
+                `genie-table-${index + 1}`,
+                true
+            ).forEach((button) => bar.appendChild(button));
+
+            wrap.parentNode.insertBefore(bar, wrap);
+        });
+    }
+
+
+    function renderTable(table, index) {
+
+        const columns = table.columns || [];
+        const rows = table.rows || [];
+        const baseName = fileSafeName(table.title || `result-${index + 1}`);
+
+        const card = document.createElement("div");
+        card.className = "result-card";
+        card.dataset.sourceIds = normalizeSourceId(table.attachment_id);
+
+        const header = document.createElement("div");
+        header.className = "result-header";
+
+        const titleWrap = document.createElement("div");
+        titleWrap.innerHTML = `
+            <div class="result-title">${escapeHtml(table.title || `Result ${index + 1}`)}</div>
+            <div class="result-meta">
+                ${Number(table.row_count || rows.length || 0).toLocaleString("en-IN")} row(s)
+                ${table.truncated ? " · result truncated" : ""}
+            </div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "result-actions";
+
+        let code = null;
+
+        if (table.query) {
+            const codeButton = document.createElement("button");
+            codeButton.type = "button";
+            codeButton.className = "result-button";
+            codeButton.textContent = "Show code";
+
+            code = document.createElement("pre");
+            code.className = "genie-sql";
+            code.textContent = table.query;
+            code.hidden = true;
+
+            codeButton.addEventListener("click", () => {
+                code.hidden = !code.hidden;
+                codeButton.textContent = code.hidden ? "Show code" : "Hide code";
+            });
+
+            actions.appendChild(codeButton);
+        }
+
+        // Downloads of exactly what is shown on screen.
+        if (columns.length && rows.length) {
+            makeDownloadButtons(columns, rows, baseName)
+                .forEach((button) => actions.appendChild(button));
+        }
+
+        // When the on-screen table was truncated, offer Databricks' full result.
+        if (table.truncated && table.download_url) {
+            const fullButton = document.createElement("button");
+            fullButton.type = "button";
+            fullButton.className = "result-button";
+            fullButton.dataset.label = "Full CSV (all rows)";
+            fullButton.textContent = "Full CSV (all rows)";
+            table.__downloadButton = fullButton;
+            fullButton.addEventListener("click", () => downloadFullResult(table));
+            actions.appendChild(fullButton);
+        }
+
+        header.appendChild(titleWrap);
+        header.appendChild(actions);
+        card.appendChild(header);
+
+        if (code) {
+            card.appendChild(code);
+        }
+
+        if (table.description) {
+            const description = document.createElement("div");
+            description.className = "result-description";
+            description.textContent = table.description;
+            card.appendChild(description);
+        }
+
+        const wrap = document.createElement("div");
+        wrap.className = "result-table-wrap";
+
+        const html = document.createElement("table");
+        html.className = "result-table";
+
+        const thead = document.createElement("thead");
+        const headerRow = document.createElement("tr");
+        columns.forEach((column) => {
+            const th = document.createElement("th");
+            th.textContent = column;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        html.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        rows.forEach((row) => {
+            const tr = document.createElement("tr");
+            columns.forEach((column, columnIndex) => {
+                const td = document.createElement("td");
+                td.textContent = formatCell(row[columnIndex], column);
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        html.appendChild(tbody);
+
+        wrap.appendChild(html);
+        card.appendChild(wrap);
+
+        if (table.truncated) {
+            const note = document.createElement("div");
+            note.className = "result-meta";
+            note.style.padding = "8px 10px";
+            note.textContent = "Only the first rows are shown here; use Full CSV for the complete Genie query result.";
+            card.appendChild(note);
+        }
+
+        if (table.error) {
+            const error = document.createElement("div");
+            error.className = "result-meta";
+            error.style.padding = "10px";
+            error.textContent = table.error;
+            card.appendChild(error);
+        }
+
+        return card;
+    }
+
+
+    function renderThoughts(thoughts, tables = []) {
+
+        const details = document.createElement("details");
+        details.className = "thoughts-card";
+
+        const summary = document.createElement("summary");
+        summary.textContent = "Thought process";
+        details.appendChild(summary);
+
+        const body = document.createElement("div");
+        body.className = "thoughts-body";
+
+        (thoughts || []).forEach((thought, index) => {
+            const item = document.createElement("div");
+            item.className = "thought-item";
+
+            const number = document.createElement("div");
+            number.className = "thought-number";
+            number.textContent = `${index + 1}.`;
+
+            const content = document.createElement("div");
+            content.innerHTML = renderMarkdown(thought.content || "");
+
+            item.appendChild(number);
+            item.appendChild(content);
+            body.appendChild(item);
+        });
+
+        // Like the Databricks UI, the raw query results live inside the
+        // collapsed thought process instead of cluttering the report.
+        if (tables.length) {
+            const heading = document.createElement("div");
+            heading.className = "thought-subheading";
+            heading.textContent = "Query results";
+            body.appendChild(heading);
+
+            tables.forEach((table, index) => {
+                const holder = document.createElement("div");
+                holder.className = "thought-table";
+                holder.appendChild(renderTable({ ...table }, index));
+                body.appendChild(holder);
+            });
+        }
+
+        details.appendChild(body);
+        return details;
+    }
+
+
+    const CHART_COLORS = [
+        "#2563eb", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6",
+    ];
+
+
+    function findSourceTable(visualization, tables) {
+
+        const ids = [
+            visualization.query_attachment_id,
+            visualization.attachment_id,
+        ].filter(Boolean);
+
+        for (const id of ids) {
+            const match = tables.find((table) => table.attachment_id === id);
+            if (match) return match;
+        }
+
+        return tables.length ? tables[tables.length - 1] : null;
+    }
+
+
+    function isIsoDate(value) {
+        return /^\d{4}-\d{2}-\d{2}([T ]|$)/.test(String(value));
+    }
+
+
+    function formatChartLabel(value, monthly) {
+
+        if (!isIsoDate(value)) return String(value);
+
+        const date = new Date(String(value));
+        if (Number.isNaN(date.getTime())) return String(value);
+
+        return date.toLocaleDateString(
+            "en-IN",
+            monthly
+                ? { month: "short", year: "numeric", timeZone: "UTC" }
+                : { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }
+        );
+    }
+
+
+    function columnKind(columnName) {
+
+        if (isCurrencyColumn(columnName)) return "currency";
+        if (isQuantityColumn(columnName)) return "quantity";
+        if (isPercentageColumn(columnName)) return "percent";
+        return "number";
+    }
+
+
+    function formatChartValue(value, kind) {
+
+        if (value === null || value === undefined) return "—";
+
+        if (kind === "currency") return formatIndianCurrency(value);
+
+        const formatted = Number(value).toLocaleString("en-IN", {
+            maximumFractionDigits: 2,
+        });
+
+        return kind === "percent" ? `${formatted}%` : formatted;
+    }
+
+
+    // Build a chart from the REAL query result that Genie produced.
+    function buildChartSpec(table, visualization) {
+
+        const columns = table.columns || [];
+        const rows = (table.rows || []).slice(0, 50);
+
+        if (columns.length < 2 || !rows.length) return null;
+
+        const numericColumns = [];
+        for (let c = 1; c < columns.length; c++) {
+            const values = rows
+                .map((row) => row[c])
+                .filter((v) => v !== null && v !== undefined && v !== "");
+            if (values.length && values.every(isNumericValue)) {
+                numericColumns.push(c);
+            }
+        }
+
+        if (!numericColumns.length) return null;
+
+        const dateAxis = rows.every((row) => isIsoDate(row[0]));
+        const monthly = dateAxis
+            && rows.every((row) => /^\d{4}-\d{2}-01/.test(String(row[0])));
+
+        const hint = [
+            visualization.chart_type,
+            visualization.type,
+            visualization.title,
+        ].join(" ").toLowerCase();
+
+        const type = (dateAxis || /line|trend/.test(hint)) ? "line" : "bar";
+
+        // Which columns does this chart's TITLE talk about?
+        // "Weekly Quantity Sold" -> quantity column, "Weekly Revenue" ->
+        // revenue column, even when both charts come from the same query.
+        const SERIES_GROUPS = [
+            ["quantity", "qty", "units", "unit"],
+            ["revenue", "sales", "amount", "value"],
+            ["orders", "order", "transactions", "transaction", "invoices", "invoice", "bills"],
+        ];
+
+        const seriesGroup = (name) => {
+            const text = normalizeColumnName(name);
+            return SERIES_GROUPS.findIndex(
+                (words) => words.some((word) => text.includes(word))
+            );
+        };
+
+        const titleText = String(visualization.title || "").toLowerCase();
+        const titleGroups = SERIES_GROUPS
+            .map((words, group) =>
+                words.some((word) => new RegExp(`\\b${word}s?\\b`).test(titleText))
+                    ? group
+                    : -1
+            )
+            .filter((group) => group >= 0);
+
+        let preferred = numericColumns.filter(
+            (c) => titleGroups.includes(seriesGroup(columns[c]))
+        );
+
+        // Otherwise show every numeric column of the same kind as the first
+        // one (e.g. actual / prediction / bounds).
+        if (!preferred.length) {
+            const firstColumnKind = columnKind(columns[numericColumns[0]]);
+            preferred = numericColumns.filter(
+                (c) => columnKind(columns[c]) === firstColumnKind
+            );
+        }
+
+        const preferredSet = new Set(preferred);
+        const firstKind = columnKind(columns[preferred[0]]);
+
+        // Other columns start hidden and can be switched on from the legend.
+        const datasets = [
+            ...preferred,
+            ...numericColumns.filter((c) => !preferredSet.has(c)),
+        ].slice(0, 5).map((c) => ({
+            label: columns[c],
+            kind: columnKind(columns[c]),
+            hidden: !preferredSet.has(c),
+            data: rows.map((row) =>
+                isNumericValue(row[c]) ? Number(row[c]) : null
+            ),
+        }));
+
+        return {
+            type,
+            labels: rows.map((row) => formatChartLabel(row[0], monthly)),
+            datasets,
+            firstKind,
+            horizontal: type === "bar" && rows.length > 12,
+        };
+    }
+
+
+    function renderNativeChart(spec) {
+
+        const wrap = document.createElement("div");
+        wrap.className = "chart-wrap";
+        wrap.style.height = spec.horizontal
+            ? `${Math.max(340, spec.labels.length * 24 + 90)}px`
+            : "340px";
+
+        const canvas = document.createElement("canvas");
+        wrap.appendChild(canvas);
+
+        const valueScale = {
+            beginAtZero: true,
+            ticks: {
+                callback: (value) => formatChartValue(value, spec.firstKind),
+            },
+        };
+
+        setTimeout(() => {
+            new Chart(canvas, {
+                type: spec.type,
+                data: {
+                    labels: spec.labels,
+                    datasets: spec.datasets.map((dataset, index) => ({
+                        label: dataset.label,
+                        data: dataset.data,
+                        hidden: dataset.hidden,
+                        backgroundColor: CHART_COLORS[index % CHART_COLORS.length],
+                        borderColor: CHART_COLORS[index % CHART_COLORS.length],
+                        borderWidth: spec.type === "line" ? 2 : 0,
+                        borderRadius: spec.type === "bar" ? 3 : 0,
+                        pointRadius: spec.type === "line" ? 3 : 0,
+                        tension: 0.25,
+                        spanGaps: false,
+                    })),
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: spec.horizontal ? "y" : "x",
+                    plugins: {
+                        legend: { display: spec.datasets.length > 1 },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const value = spec.horizontal
+                                        ? context.parsed.x
+                                        : context.parsed.y;
+                                    const kind = spec.datasets[context.datasetIndex].kind;
+                                    return `${context.dataset.label}: ${formatChartValue(value, kind)}`;
+                                },
+                            },
+                        },
+                    },
+                    scales: spec.horizontal
+                        ? { x: valueScale, y: { ticks: { autoSkip: false } } }
+                        : {
+                            y: valueScale,
+                            x: {
+                                ticks: {
+                                    maxRotation: 60,
+                                    autoSkip: spec.labels.length > 24,
+                                },
+                            },
+                        },
+                },
+            });
+        }, 0);
+
+        return wrap;
+    }
+
+
+    function renderVisualization(visualization, tables = []) {
+
+        const card = document.createElement("div");
+        card.className = "result-card visualization-card";
+
+        const header = document.createElement("div");
+        header.className = "result-header";
+
+        const title = document.createElement("div");
+        title.className = "result-title";
+        title.textContent = visualization.title || "Visualization";
+
+        const actions = document.createElement("div");
+        actions.className = "result-actions";
+
+        const open = document.createElement("a");
+        open.className = "result-button";
+        open.href = visualization.image_url || "#";
+        open.target = "_blank";
+        open.rel = "noopener";
+        open.textContent = "Open image";
+        actions.appendChild(open);
+
+        header.appendChild(title);
+        header.appendChild(actions);
+        card.appendChild(header);
+
+        // Preferred: a real chart drawn from the real query result.
+        let rendered = false;
+        const table = findSourceTable(visualization, tables);
+
+        if (typeof Chart !== "undefined" && table) {
+            try {
+                const spec = buildChartSpec(table, visualization);
+                if (spec) {
+                    card.appendChild(renderNativeChart(spec));
+
+                    const source = document.createElement("div");
+                    source.className = "chart-source";
+                    source.textContent = `Source: ${table.title || "Query result"}`;
+                    card.appendChild(source);
+
+                    const data = document.createElement("details");
+                    data.className = "chart-data";
+                    const dataSummary = document.createElement("summary");
+                    dataSummary.textContent = "View data";
+                    data.appendChild(dataSummary);
+                    data.appendChild(renderTable({ ...table }, 0));
+                    card.appendChild(data);
+
+                    rendered = true;
+                }
+            } catch (error) {
+                console.error("Native chart failed, using image:", error);
+                rendered = false;
+            }
+        }
+
+        card.dataset.native = rendered ? "1" : "0";
+        card.__sourceTable = rendered ? table : null;
+        card.dataset.sourceIds = [
+            rendered ? table.attachment_id : "",
+            visualization.attachment_id,
+            visualization.query_attachment_id,
+        ].map(normalizeSourceId).filter(Boolean).join(" ");
+
+        // Fallback: the rendered PNG from Databricks.
+        if (!rendered && visualization.image_url) {
+            const image = document.createElement("img");
+            image.className = "genie-visualization";
+            image.src = visualization.image_url;
+            image.alt = visualization.title || "Genie visualization";
+            image.loading = "lazy";
+            card.appendChild(image);
+        }
+
+        return card;
+    }
+
+
+    function renderSuggestedQuestions(questions) {
+
+        const container = document.createElement("div");
+        container.className = "suggestions";
+
+        questions.forEach((question) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "suggestion-button";
+            button.textContent = question;
+            button.addEventListener("click", () => {
+                messageInput.value = question;
+                chatForm.requestSubmit();
+            });
+            container.appendChild(button);
+        });
+
+        return container;
+    }
+
+
+    // Databricks layout: Thought process (with raw query results) first,
+    // then the report text, then the charts and suggested questions.
+    function renderPresentationParts(presentation) {
+
+        const parts = { thoughts: null, after: [] };
+
+        if (!presentation) return parts;
+
+        const blocks = presentation.blocks || [];
+        const fromBlocks = (type) =>
+            blocks.filter((block) => block.type === type).map((block) => block.data);
+
+        const thoughts = (presentation.thoughts || []).length
+            ? presentation.thoughts
+            : (fromBlocks("thoughts")[0] || []);
+
+        const tables = (presentation.tables || []).length
+            ? presentation.tables
+            : fromBlocks("table");
+
+        const visualizations = (presentation.visualizations || []).length
+            ? presentation.visualizations
+            : fromBlocks("visualization");
+
+        const suggested = (presentation.suggested_questions || []).length
+            ? presentation.suggested_questions
+            : (fromBlocks("suggested_questions")[0] || []);
+
+        // The thought process holds the reasoning only. Result tables are
+        // shown in the answer itself, with CSV / Excel downloads.
+        if (thoughts.length) {
+            parts.thoughts = renderThoughts(thoughts, []);
+        }
+
+        const chartSources = new Set();
+
+        visualizations.forEach((visualization) => {
+            const card = renderVisualization(visualization, tables);
+            parts.after.push(card);
+            if (card.__sourceTable) {
+                chartSources.add(card.__sourceTable.attachment_id);
+            }
+        });
+
+        // Every query result that is not already the "View data" of a chart.
+        const standalone = tables.filter(
+            (table) => !chartSources.has(table.attachment_id)
+        );
+
+        if (standalone.length) {
+            const stack = document.createElement("div");
+            stack.className = "table-card-stack";
+            standalone.forEach((table, index) => {
+                stack.appendChild(renderTable({ ...table }, index));
+            });
+            parts.after.push(stack);
+        }
+
+        if (suggested.length) {
+            parts.after.push(renderSuggestedQuestions(suggested));
+        }
+
+        return parts;
+    }
+
+
+    function addMessage(
+        role,
+        content,
+        isError = false,
+        presentation = null
+    ) {
+
+        welcome.classList.add("hidden");
+
+        const row = document.createElement("div");
+        row.className = `message-row ${role}`;
+
+        const message = document.createElement("div");
+        message.className = `message ${role}`;
+
+        if (isError) {
+            message.classList.add("error");
+        }
+
+        if (role === "assistant" && !isError) {
+            const parts = renderPresentationParts(presentation);
+
+            const stack = document.createElement("div");
+            stack.className = "assistant-content";
+
+            if (parts.thoughts) {
+                stack.appendChild(parts.thoughts);
+            }
+
+            const answer = document.createElement("div");
+            answer.className = "answer-text";
+            answer.innerHTML = renderMarkdown(content);
+            enhanceMarkdownTables(answer);
+            stack.appendChild(answer);
+
+            parts.after.forEach((node) => stack.appendChild(node));
+
+            message.appendChild(stack);
+
+            wireCitationLinks(answer, message);
+        } else {
+            message.textContent = content;
+        }
+
+        row.appendChild(message);
+        messages.appendChild(row);
+
+        scrollToBottom();
+    }
+
+
+    function addTypingIndicator() {
+
+        welcome.classList.add(
+            "hidden"
+        );
+
+
+        const row =
+            document.createElement(
+                "div"
+            );
+
+        row.className =
+            "message-row assistant";
+
+
+        row.id =
+            "typingIndicator";
+
+
+        const message =
+            document.createElement(
+                "div"
+            );
+
+        message.className =
+            "message assistant typing";
+
+
+        message.innerHTML =
+            `
+                <span></span>
+                <span></span>
+                <span></span>
+            `;
+
+
+        row.appendChild(
+            message
+        );
+
+        messages.appendChild(
+            row
+        );
+
+
+        scrollToBottom();
+    }
+
+
+    function removeTypingIndicator() {
+
+        const indicator =
+            document.getElementById(
+                "typingIndicator"
+            );
+
+
+        if (indicator) {
+
+            indicator.remove();
+        }
+    }
+
+
+    function scrollToBottom() {
+
+        window.scrollTo(
+            {
+                top:
+                    document.body.scrollHeight,
+
+                behavior:
+                    "smooth",
+            }
+        );
+    }
+
+
+    function setSendingState(
+        sending
+    ) {
+
+        isSending =
+            sending;
+
+
+        sendButton.disabled =
+            sending;
+
+
+        messageInput.disabled =
+            sending;
+
+
+        if (sending) {
+
+            sendButton.textContent =
+                "…";
+
+        } else {
+
+            sendButton.textContent =
+                "↑";
+        }
+    }
+
+
+    // =========================================================
+    // CHAT HISTORY SIDEBAR
+    // =========================================================
+
+    async function loadChatList() {
+
+        try {
+
+            const chats =
+                await apiRequest(
+                    "/api/chats"
+                );
+
+
+            chatList.innerHTML =
+                "";
+
+
+            if (
+                !chats
+                || chats.length === 0
+            ) {
+
+                const empty =
+                    document.createElement(
+                        "div"
+                    );
+
+                empty.style.padding =
+                    "10px";
+
+                empty.style.color =
+                    "#6b7280";
+
+                empty.style.fontSize =
+                    "12px";
+
+                empty.textContent =
+                    "No conversations yet.";
+
+                chatList.appendChild(
+                    empty
+                );
+
+                return;
+            }
+
+
+            chats.forEach(
+                (chat) => {
+
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
+
+                    item.className =
+                        "chat-item";
+
+
+                    if (
+                        chat.session_id
+                        === chatSessionId
+                    ) {
+
+                        item.classList.add(
+                            "active"
+                        );
+                    }
+
+
+                    const title =
+                        document.createElement(
+                            "div"
+                        );
+
+                    title.className =
+                        "chat-item-title";
+
+                    title.textContent =
+                        chat.title;
+
+
+                    const deleteButton =
+                        document.createElement(
+                            "button"
+                        );
+
+                    deleteButton.className =
+                        "delete-chat-button";
+
+                    deleteButton.type =
+                        "button";
+
+                    deleteButton.textContent =
+                        "×";
+
+                    deleteButton.title =
+                        "Delete conversation";
+
+
+                    deleteButton.addEventListener(
+                        "click",
+                        async (event) => {
+
+                            event.stopPropagation();
+
+                            await deleteChat(
+                                chat.session_id
+                            );
+                        }
+                    );
+
+
+                    item.appendChild(
+                        title
+                    );
+
+                    item.appendChild(
+                        deleteButton
+                    );
+
+
+                    item.addEventListener(
+                        "click",
+                        async () => {
+
+                            await loadChat(
+                                chat.session_id
+                            );
+                        }
+                    );
+
+
+                    chatList.appendChild(
+                        item
+                    );
+                }
+            );
+
+        } catch (error) {
+
+            if (
+                error.status === 401
+            ) {
+
+                handleExpiredSession();
+            }
+        }
+    }
+
+
+    // =========================================================
+    // LOAD CHAT
+    // =========================================================
+
+    async function loadChat(
+        sessionId
+    ) {
+
+        if (isSending) {
+
+            return;
+        }
+
+
+        try {
+
+            const history =
+                await apiRequest(
+                    `/api/chats/${encodeURIComponent(
+                        sessionId
+                    )}`
+                );
+
+
+            chatSessionId =
+                history.session_id;
+
+
+            headerTitle.textContent =
+                history.title;
+
+
+            clearMessages();
+
+
+            history.messages.forEach(
+                (message) => {
+
+                    addMessage(
+                        message.role,
+                        message.content,
+                        false,
+                        message.presentation || null
+                    );
+                }
+            );
+
+
+            await loadChatList();
+
+            scrollToBottom();
+
+            messageInput.focus();
+
+        } catch (error) {
+
+            if (
+                error.status === 401
+            ) {
+
+                handleExpiredSession();
+
+                return;
+            }
+
+
+            addMessage(
+                "assistant",
+                error.message
+                || "Unable to load this conversation.",
+                true
+            );
+        }
+    }
+
+
+    // =========================================================
+    // NEW CHAT
+    // =========================================================
+
+    function startNewChat() {
+
+        if (isSending) {
+
+            return;
+        }
+
+
+        chatSessionId =
+            null;
+
+
+        headerTitle.textContent =
+            "New Chat";
+
+
+        clearMessages();
+
+
+        document
+            .querySelectorAll(
+                ".chat-item.active"
+            )
+            .forEach(
+                (item) => {
+
+                    item.classList.remove(
+                        "active"
+                    );
+                }
+            );
+
+
+        messageInput.value =
+            "";
+
+        messageInput.focus();
+    }
+
+
+    // =========================================================
+    // DELETE CHAT
+    // =========================================================
+
+    async function deleteChat(
+        sessionId
+    ) {
+
+        if (isSending) {
+
+            return;
+        }
+
+
+        const confirmed =
+            window.confirm(
+                "Delete this conversation?"
+            );
+
+
+        if (!confirmed) {
+
+            return;
+        }
+
+
+        try {
+
+            await apiRequest(
+                `/api/chats/${encodeURIComponent(
+                    sessionId
+                )}`,
+                {
+                    method:
+                        "DELETE",
+                }
+            );
+
+
+            if (
+                chatSessionId
+                === sessionId
+            ) {
+
+                startNewChat();
+            }
+
+
+            await loadChatList();
+
+        } catch (error) {
+
+            if (
+                error.status === 401
+            ) {
+
+                handleExpiredSession();
+
+                return;
+            }
+
+
+            alert(
+                error.message
+                || "Unable to delete conversation."
+            );
+        }
+    }
+
+
+    // =========================================================
+    // SEND MESSAGE
+    // =========================================================
+
+    chatForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+
+            if (isSending) {
+
+                return;
+            }
+
+
+            const message =
+                messageInput.value.trim();
+
+
+            if (!message) {
+
+                return;
+            }
+
+
+            messageInput.value =
+                "";
+
+
+            addMessage(
+                "user",
+                message
+            );
+
+
+            addTypingIndicator();
+
+            setSendingState(
+                true
+            );
+
+
+            try {
+
+                let data;
+
+
+                // -------------------------------------------------
+                // First message = create new Genie conversation.
+                // -------------------------------------------------
+
+                if (!chatSessionId) {
+
+                    data =
+                        await apiRequest(
+                            "/api/chat",
+                            {
+                                method:
+                                    "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            message,
+                                        }
+                                    ),
+                            }
+                        );
+
+                }
+
+                // -------------------------------------------------
+                // Existing chat = continue Genie conversation.
+                // -------------------------------------------------
+
+                else {
+
+                    data =
+                        await apiRequest(
+                            `/api/chat/${encodeURIComponent(
+                                chatSessionId
+                            )}`,
+                            {
+                                method:
+                                    "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json",
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+                                            message,
+                                        }
+                                    ),
+                            }
+                        );
+                }
+
+
+                chatSessionId =
+                    data.session_id;
+
+
+                removeTypingIndicator();
+
+
+                addMessage(
+                    "assistant",
+                    data.answer,
+                    false,
+                    data.presentation || null
+                );
+
+
+                // -------------------------------------------------
+                // Refresh sidebar so the new title/activity
+                // appears immediately.
+                // -------------------------------------------------
+
+                await loadChatList();
+
+
+                // -------------------------------------------------
+                // Set title after first question.
+                // -------------------------------------------------
+
+                const chats =
+                    await apiRequest(
+                        "/api/chats"
+                    );
+
+
+                const current =
+                    chats.find(
+                        (chat) =>
+                            chat.session_id
+                            === chatSessionId
+                    );
+
+
+                if (current) {
+
+                    headerTitle.textContent =
+                        current.title;
+                }
+
+
+            } catch (error) {
+
+                removeTypingIndicator();
+
+
+                if (
+                    error.status === 401
+                ) {
+
+                    handleExpiredSession();
+
+                } else if (
+                    error.status === 429
+                ) {
+
+                    const retry =
+                        error.retryAfter
+                        || "a short while";
+
+
+                    addMessage(
+                        "assistant",
+                        `Too many requests. Please try again in ${retry} seconds.`,
+                        true
+                    );
+
+                } else {
+
+                    addMessage(
+                        "assistant",
+                        error.message
+                        || "Something went wrong while contacting Genie.",
+                        true
+                    );
+                }
+
+            } finally {
+
+                setSendingState(
+                    false
+                );
+
+                messageInput.focus();
+            }
+        }
+    );
+
+
+    // =========================================================
+    // LOGIN
+    // =========================================================
+
+    loginForm.addEventListener(
+        "submit",
+        async (event) => {
+
+            event.preventDefault();
+
+
+            clearLoginError();
+
+
+            const username =
+                usernameInput.value.trim();
+
+            const password =
+                passwordInput.value;
+
+
+            if (
+                !username
+                || !password
+            ) {
+
+                showLoginError(
+                    "Username and password are required."
+                );
+
+                return;
+            }
+
+
+            loginButton.disabled =
+                true;
+
+            loginButton.textContent =
+                "Signing in...";
+
+
+            try {
+
+                await apiRequest(
+                    "/api/login",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                        },
+
+                        body:
+                            JSON.stringify(
+                                {
+                                    username,
+                                    password,
+                                }
+                            ),
+                    }
+                );
+
+
+                passwordInput.value =
+                    "";
+
+
+                showChat(
+                    username
+                );
+
+
+                await loadChatList();
+
+
+            } catch (error) {
+
+                if (
+                    error.status === 429
+                ) {
+
+                    showLoginError(
+                        "Too many login attempts. Please wait and try again."
+                    );
+
+                } else {
+
+                    showLoginError(
+                        error.message
+                        || "Login failed."
+                    );
+                }
+
+            } finally {
+
+                loginButton.disabled =
+                    false;
+
+                loginButton.textContent =
+                    "Sign in";
+            }
+        }
+    );
+
+
+    // =========================================================
+    // LOGOUT
+    // =========================================================
+
+    logoutButton.addEventListener(
+        "click",
+        async () => {
+
+            try {
+
+                await apiRequest(
+                    "/api/logout",
+                    {
+                        method:
+                            "POST",
+                    }
+                );
+
+            } catch {
+                // Continue local logout.
+            }
+
+
+            chatSessionId =
+                null;
+
+
+            messages.innerHTML =
+                "";
+
+
+            chatList.innerHTML =
+                "";
+
+
+            headerTitle.textContent =
+                "New Chat";
+
+
+            messageInput.value =
+                "";
+
+
+            showLogin();
+        }
+    );
+
+
+    // =========================================================
+    // NEW CHAT BUTTON
+    // =========================================================
+
+    newChatButton.addEventListener(
+        "click",
+        () => {
+
+            startNewChat();
+        }
+    );
+
+
+    // =========================================================
+    // TEXTAREA
+    // =========================================================
+
+    messageInput.addEventListener(
+        "input",
+        () => {
+
+            messageInput.style.height =
+                "auto";
+
+
+            messageInput.style.height =
+                Math.min(
+                    messageInput.scrollHeight,
+                    150
+                ) + "px";
+        }
+    );
+
+
+    messageInput.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.key === "Enter"
+                && !event.shiftKey
+            ) {
+
+                event.preventDefault();
+
+                chatForm.requestSubmit();
+            }
+        }
+    );
+
+
+    // =========================================================
+    // EXPIRED SESSION
+    // =========================================================
+
+    function handleExpiredSession() {
+
+        chatSessionId =
+            null;
+
+
+        alert(
+            "Your session has expired. Please sign in again."
+        );
+
+
+        showLogin();
+    }
+
+
+    // =========================================================
+    // SESSION CHECK
+    // =========================================================
+
+    async function checkSession() {
+
+        try {
+
+            const data =
+                await apiRequest(
+                    "/api/session"
+                );
+
+
+            if (
+                data.authenticated
+            ) {
+
+                showChat(
+                    data.username
+                );
+
+
+                await loadChatList();
+
+                return;
+            }
+
+        } catch {
+            // Treat as unauthenticated.
+        }
+
+
+        showLogin();
+    }
+
+
+    // =========================================================
+    // INITIALIZE
+    // =========================================================
+
+    checkSession();
+
+</script>
+
+</body>
+
+</html>
