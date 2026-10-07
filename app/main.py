@@ -203,6 +203,27 @@ async def get_current_user(
 
 
 # =========================================================
+# ADMIN ACCESS
+# =========================================================
+
+async def get_admin_user(
+    username: str = Depends(get_current_user),
+) -> str:
+    """
+    Restrict user-management operations to the configured
+    administrator account.
+    """
+
+    if username != settings.app_username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Administrator access required.",
+        )
+
+    return username
+
+
+# =========================================================
 # CSRF PROTECTION
 # =========================================================
 
@@ -257,6 +278,18 @@ async def index():
 
     return FileResponse(
         STATIC_DIR / "index.html"
+    )
+
+
+@app.get(
+    "/admin",
+    include_in_schema=False,
+)
+async def admin_page(
+    _: str = Depends(get_admin_user),
+):
+    return FileResponse(
+        STATIC_DIR / "admin.html"
     )
 
 
@@ -426,6 +459,201 @@ async def current_session(
 
     return {
         "authenticated": True,
+        "username": username,
+    }
+
+
+# =========================================================
+# ADMIN USER MANAGEMENT
+# =========================================================
+
+@app.get("/api/admin/users")
+async def admin_list_users(
+    _: str = Depends(get_admin_user),
+):
+    users = await auth_service.list_users()
+
+    for user in users:
+        user["is_admin"] = (
+            user["username"] == settings.app_username
+        )
+
+    return {"users": users}
+
+
+@app.post("/api/admin/users")
+async def admin_create_user(
+    request: Request,
+    _: str = Depends(get_admin_user),
+    __: None = Depends(require_csrf),
+):
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid JSON request.",
+        )
+
+    username = str(payload.get("username", "")).strip()
+    password = str(payload.get("password", ""))
+
+    if len(username) < 3 or len(username) > 80:
+        raise HTTPException(
+            status_code=400,
+            detail="Username must be between 3 and 80 characters.",
+        )
+
+    if any(
+        not (character.isalnum() or character in "._-")
+        for character in username
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Username may contain only letters, numbers, dot, underscore, and hyphen.",
+        )
+
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters.",
+        )
+
+    try:
+        created = await auth_service.create_user(
+            username,
+            password,
+        )
+    except Exception:
+        logger.exception(
+            "Failed to create user %s",
+            username,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to create user.",
+        )
+
+    if not created:
+        raise HTTPException(
+            status_code=409,
+            detail="Username already exists.",
+        )
+
+    return {
+        "status": "ok",
+        "username": username,
+    }
+
+
+@app.post("/api/admin/users/status")
+async def admin_set_user_status(
+    request: Request,
+    _: str = Depends(get_admin_user),
+    __: None = Depends(require_csrf),
+):
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid JSON request.",
+        )
+
+    username = str(payload.get("username", "")).strip()
+    is_active = payload.get("is_active")
+
+    if not username or not isinstance(is_active, bool):
+        raise HTTPException(
+            status_code=400,
+            detail="Username and is_active are required.",
+        )
+
+    try:
+        updated = await auth_service.set_user_active(
+            username,
+            is_active,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+    except Exception:
+        logger.exception(
+            "Failed to update user status for %s",
+            username,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to update user status.",
+        )
+
+    if not updated:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found.",
+        )
+
+    return {
+        "status": "ok",
+        "username": username,
+        "is_active": is_active,
+    }
+
+
+@app.post("/api/admin/users/password")
+async def admin_reset_user_password(
+    request: Request,
+    _: str = Depends(get_admin_user),
+    __: None = Depends(require_csrf),
+):
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid JSON request.",
+        )
+
+    username = str(payload.get("username", "")).strip()
+    password = str(payload.get("password", ""))
+
+    if not username:
+        raise HTTPException(
+            status_code=400,
+            detail="Username is required.",
+        )
+
+    if len(password) < 8:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters.",
+        )
+
+    try:
+        updated = await auth_service.reset_password(
+            username,
+            password,
+        )
+    except Exception:
+        logger.exception(
+            "Failed to reset password for %s",
+            username,
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Unable to reset password.",
+        )
+
+    if not updated:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found.",
+        )
+
+    return {
+        "status": "ok",
         "username": username,
     }
 
