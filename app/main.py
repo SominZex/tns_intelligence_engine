@@ -348,7 +348,7 @@ async def login(
             },
         )
 
-    if not auth_service.authenticate(
+    if not await auth_service.authenticate(
         request.username,
         request.password,
     ):
