@@ -802,21 +802,103 @@
            MOBILE
            ===================================================== */
 
+        .mobile-sidebar-toggle,
+        .sidebar-overlay {
+            display: none;
+        }
+
         @media (max-width: 700px) {
+            .mobile-sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                margin-right: 10px;
+                flex-shrink: 0;
+                border: 1px solid #d1d5db;
+                border-radius: 9px;
+                background: white;
+                color: #111827;
+                cursor: pointer;
+                font-size: 20px;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 999;
+                display: block;
+                background: rgba(0, 0, 0, 0.38);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
 
             .sidebar {
-                width: 230px;
+                width: min(290px, 82vw);
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.22s ease;
+                box-shadow: 8px 0 24px rgba(0, 0, 0, 0.16);
+            }
+
+            .app.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .app.sidebar-open .sidebar-overlay {
+                opacity: 1;
+                pointer-events: auto;
             }
 
             .main-area {
-                margin-left: 230px;
-                width: calc(100% - 230px);
+                margin-left: 0;
+                width: 100%;
+                min-width: 0;
+            }
+
+            .header {
+                padding: 0 12px;
+            }
+
+            .header > div:first-child {
+                display: flex;
+                align-items: center;
+                min-width: 0;
+            }
+
+            .header-title,
+            .header-subtitle {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .main {
+                max-width: none;
+                padding: 18px 12px 14px;
             }
 
             .message {
-                max-width: 90%;
+                max-width: 94%;
             }
 
+            .composer {
+                width: 100%;
+                gap: 6px;
+                padding: 8px;
+            }
+
+            .composer textarea {
+                min-width: 0;
+                min-height: 46px;
+                font-size: 16px;
+            }
+
+            .welcome h1 {
+                font-size: 25px;
+            }
         }
 
 
@@ -1188,6 +1270,12 @@
 
     </aside>
 
+    <div
+        id="sidebarOverlay"
+        class="sidebar-overlay"
+        aria-hidden="true"
+    ></div>
+
 
     <!-- =====================================================
          MAIN AREA
@@ -1199,6 +1287,14 @@
         <header class="header">
 
             <div>
+
+                <button
+                    id="mobileSidebarToggle"
+                    class="mobile-sidebar-toggle"
+                    type="button"
+                    aria-label="Open conversations"
+                    aria-expanded="false"
+                >☰</button>
 
                 <div
                     id="headerTitle"
@@ -1341,14 +1437,14 @@
             "logoutButton"
         );
 
-    const newChatButton =
-        document.getElementById(
-            "newChatButton"
-        );
-
     const adminPanelButton =
         document.getElementById(
             "adminPanelButton"
+        );
+
+    const newChatButton =
+        document.getElementById(
+            "newChatButton"
         );
 
     const chatList =
@@ -1385,6 +1481,50 @@
         document.getElementById(
             "sendButton"
         );
+
+    const mobileSidebarToggle =
+        document.getElementById("mobileSidebarToggle");
+
+    const sidebarOverlay =
+        document.getElementById("sidebarOverlay");
+
+    function isMobileLayout() {
+        return window.matchMedia("(max-width: 700px)").matches;
+    }
+
+    function setSidebarOpen(open) {
+        if (!isMobileLayout()) return;
+        chatScreen.classList.toggle("sidebar-open", open);
+        mobileSidebarToggle?.setAttribute(
+            "aria-expanded",
+            open ? "true" : "false"
+        );
+        mobileSidebarToggle?.setAttribute(
+            "aria-label",
+            open ? "Close conversations" : "Open conversations"
+        );
+        if (mobileSidebarToggle) {
+            mobileSidebarToggle.textContent = open ? "×" : "☰";
+        }
+    }
+
+    mobileSidebarToggle?.addEventListener("click", () => {
+        setSidebarOpen(!chatScreen.classList.contains("sidebar-open"));
+    });
+
+    sidebarOverlay?.addEventListener("click", () => {
+        setSidebarOpen(false);
+    });
+
+    window.addEventListener("resize", () => {
+        if (!isMobileLayout()) {
+            chatScreen.classList.remove("sidebar-open");
+            if (mobileSidebarToggle) {
+                mobileSidebarToggle.textContent = "☰";
+                mobileSidebarToggle.setAttribute("aria-expanded", "false");
+            }
+        }
+    });
 
 
     // =========================================================
