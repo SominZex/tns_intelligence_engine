@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>User Management</title>
+<style>
+:root{
+  --bg:#f7f7f8;
+  --card:#fff;
+  --text:#171717;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --primary:#111827;
+  --danger:#b91c1c;
+  --success:#15803d;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+.wrap{max-width:980px;margin:0 auto;padding:32px 18px 50px}
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:16px;margin-bottom:24px
+}
+h1{margin:0;font-size:26px}
+.subtitle{margin:6px 0 0;color:var(--muted);font-size:14px}
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;margin-bottom:18px;
+  box-shadow:0 2px 8px rgba(0,0,0,.03)
+}
+.card h2{margin:0 0 16px;font-size:18px}
+.form{
+  display:grid;grid-template-columns:1fr 1fr auto;
+  gap:12px;align-items:end
+}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+input{
+  width:100%;height:42px;border:1px solid #d1d5db;border-radius:9px;
+  padding:0 12px;font-size:15px;outline:none
+}
+input:focus{border-color:#111827;box-shadow:0 0 0 3px rgba(17,24,39,.08)}
+button{
+  border:0;border-radius:9px;height:42px;padding:0 16px;
+  font-weight:600;cursor:pointer
+}
+.primary{background:var(--primary);color:white}
+.secondary{background:#f3f4f6;color:#111827}
+.danger{background:#fee2e2;color:var(--danger)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.msg{margin-top:12px;font-size:14px;min-height:20px}
+.msg.error{color:var(--danger)}
+.msg.success{color:var(--success)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--border);font-size:14px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.badge{
+  display:inline-flex;padding:4px 9px;border-radius:999px;
+  font-size:12px;font-weight:700
+}
+.active{background:#dcfce7;color:#166534}
+.inactive{background:#f3f4f6;color:#6b7280}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--muted);padding:25px}
+@media(max-width:700px){
+  .wrap{padding:20px 12px 35px}
+  .form{grid-template-columns:1fr}
+  .top{align-items:flex-start}
+  th:nth-child(3),td:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>User Management</h1>
+      <div class="subtitle">Manage users who can access the Genie analytics application.</div>
+    </div>
+    <button class="secondary" id="backBtn">Back to Chat</button>
+  </div>
+
+  <div class="card">
+    <h2>Add New User</h2>
+    <form id="addForm" class="form">
+      <div>
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="off" required minlength="3" maxlength="80">
+      </div>
+      <div>
+        <label for="password">Temporary Password</label>
+        <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
+      </div>
+      <button class="primary" id="addBtn" type="submit">Add User</button>
+    </form>
+    <div id="formMsg" class="msg"></div>
+  </div>
+
+  <div class="card">
+    <h2>Users</h2>
+    <div id="usersContainer"><div class="empty">Loading...</div></div>
+  </div>
+</div>
+
+<script>
+let csrfToken = "";
+
+async function getCsrf() {
+  const r = await fetch("/api/csrf", {credentials:"same-origin"});
+  if (!r.ok) throw new Error("Unable to initialize security token.");
+  const data = await r.json();
+  csrfToken = data.csrf_token;
+}
+
+async function api(url, options={}) {
+  options.credentials = "same-origin";
+  options.headers = {
+    ...(options.headers || {}),
+    "Content-Type": "application/json",
+    "X-CSRF-Token": csrfToken
+  };
+  const r = await fetch(url, options);
+  let data = {};
+  try { data = await r.json(); } catch (_) {}
+  if (!r.ok) {
+    if (r.status === 401) {
+      window.location.href = "/";
+      throw new Error("Authentication required.");
+    }
+    if (r.status === 403) throw new Error("Administrator access required.");
+    throw new Error(data.detail || "Request failed.");
+  }
+  return data;
+}
+
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function setMsg(text, type="") {
+  const el = document.getElementById("formMsg");
+  el.textContent = text;
+  el.className = "msg " + type;
+}
+
+async function loadUsers() {
+  const data = await api("/api/admin/users", {method:"GET"});
+  const users = data.users || [];
+  const box = document.getElementById("usersContainer");
+
+  if (!users.length) {
+    box.innerHTML = '<div class="empty">No users found.</div>';
+    return;
+  }
+
+  box.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${users.map(u => `
+          <tr>
+            <td><strong>${esc(u.username)}</strong></td>
+            <td>
+              <span class="badge ${u.is_active ? "active" : "inactive"}">
+                ${u.is_active ? "Active" : "Inactive"}
+              </span>
+            </td>
+            <td>${esc(new Date(u.created_at).toLocaleString())}</td>
+            <td>
+              <div class="actions">
+                <button
+                  class="${u.is_active ? "danger" : "secondary"}"
+                  onclick="toggleUser('${esc(u.username)}', ${!u.is_active})"
+                  ${u.is_admin ? "disabled" : ""}
+                >
+                  ${u.is_active ? "Deactivate" : "Activate"}
+                </button>
+                <button
+                  class="secondary"
+                  onclick="resetPassword('${esc(u.username)}')"
+                >
+                  Reset Password
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>`;
+}
+
+async function toggleUser(username, isActive) {
+  if (!confirm(`${isActive ? "Activate" : "Deactivate"} ${username}?`)) return;
+  try {
+    await api("/api/admin/users/status", {
+      method:"POST",
+      body:JSON.stringify({username, is_active:isActive})
+    });
+    await loadUsers();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function resetPassword(username) {
+  const password = prompt(`Enter a new password for ${username}:`);
+  if (password === null) return;
+  if (password.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+
+  try {
+    await api("/api/admin/users/password", {
+      method:"POST",
+      body:JSON.stringify({username, password})
+    });
+    alert("Password reset successfully.");
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+document.getElementById("addForm").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (password.length < 8) {
+    setMsg("Password must be at least 8 characters.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("addBtn");
+  btn.disabled = true;
+  setMsg("");
+
+  try {
+    await api("/api/admin/users", {
+      method:"POST",
+      body:JSON.stringify({username, password})
+    });
+
+    document.getElementById("addForm").reset();
+    setMsg("User created successfully.", "success");
+    await loadUsers();
+  } catch (e) {
+    setMsg(e.message, "error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("backBtn").addEventListener("click", () => {
+  window.location.href = "/";
+});
+
+(async function init() {
+  try {
+    await getCsrf();
+    await loadUsers();
+  } catch (e) {
+    document.getElementById("usersContainer").innerHTML =
+      `<div class="empty">${esc(e.message)}</div>`;
+  }
+})();
+</script>
+</body>
+</html>
