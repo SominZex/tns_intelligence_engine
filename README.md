@@ -90,6 +90,14 @@ Users can ask business questions without writing SQL:
 -   time-series analysis
 -   aggregations
 -   follow-up questions
+-   persistent chat history
+-   new-chat and chat deletion workflows
+-   multi-user access
+-   administrator user management
+-   responsive mobile interface
+-   secure browser-to-backend session handling
+-   Agent-mode response streaming/polling
+-   legacy Genie conversation compatibility handling
 
 ### Databricks Genie Agent integration
 
@@ -167,6 +175,41 @@ The application includes:
 
 Databricks credentials remain server-side.
 
+### Multi-user authentication and administration
+
+The application supports multiple application users rather than relying only on a
+single shared login.
+
+An administrator can manage users through the built-in Admin Panel:
+
+- view registered users
+- create new users
+- activate or deactivate users
+- reset user passwords
+- return to the main chat interface
+- access the Admin Panel directly from the authenticated chat UI
+
+Administrative operations are protected by the authenticated admin identity,
+CSRF validation, and the same server-side session model used by the application.
+
+User credentials and account state are stored in the PostgreSQL application
+schema. Passwords are stored as secure password hashes rather than plaintext.
+
+The current administration model provides user management and account-status
+control. It should not be described as full role-based access control (RBAC);
+fine-grained roles and permissions remain a future enhancement.
+
+### Responsive browser interface
+
+The frontend is designed for both desktop and mobile use.
+
+On mobile layouts, the conversation sidebar can be opened and closed using the
+dedicated sidebar toggle and overlay. The desktop conversation/history behavior
+remains available without changing the underlying chat/session model.
+
+The authenticated UI also provides direct navigation between the chat interface
+and the Admin Panel, avoiding the need to manually enter `/admin` in the browser.
+
 ## Request Lifecycle
 
 ### New conversation
@@ -176,28 +219,29 @@ Databricks credentials remain server-side.
 2. FastAPI validates authentication
 3. CSRF token is validated
 4. Rate limiter is checked
-5. Backend starts a Genie conversation
+5. Backend starts a Genie Agent conversation
 6. Genie processes the request
-7. Backend waits for completion
-8. Final answer is extracted
+7. Backend polls/streams the Agent response until completion
+8. Final answer and Agent items are extracted
 9. Native Genie attachments are processed
-10. Application session is created
-11. User and assistant messages are persisted
-12. Structured response is returned to browser
-13. Frontend renders the response
+10. Legacy-conversation compatibility is checked when necessary
+11. Application session is created
+12. User and assistant messages are persisted
+13. Structured response/events are returned to browser
+14. Frontend renders the response progressively and/or after completion
 ```
 
 ### Follow-up conversation
 
 ``` text
 1. Browser sends message + application session ID
-2. Backend retrieves the stored Genie conversation ID
+2. Backend retrieves the stored Genie Agent conversation ID
 3. Backend sends the message to the existing Agent conversation
 4. Genie processes the follow-up using conversation context
-5. Backend waits for completion
-6. Response is extracted
+5. Backend polls/streams the response until completion
+6. Response and Agent items are extracted
 7. Tables/charts/suggestions are processed
-8. Message is persisted
+8. Message and presentation metadata are persisted
 9. Browser renders the response
 ```
 
@@ -598,15 +642,31 @@ Centralizes environment-based configuration.
 
 ### `index.html`
 
-Custom browser interface for:
+Custom responsive browser interface for:
 
 -   login
 -   chat
 -   chat history
+-   new chat
+-   chat deletion/switching
 -   tables
 -   charts
--   suggested questions
--   response rendering
+-   native Genie visualizations
+-   query-result downloads
+-   suggested questions and follow-ups
+-   response/thought rendering
+-   mobile sidebar navigation
+-   navigation to the Admin Panel
+
+### `admin.html`
+
+Responsive administrator interface for:
+
+-   listing users
+-   creating users
+-   activating/deactivating users
+-   resetting passwords
+-   returning to the chat interface
 
 ## Technology Stack
 
@@ -728,6 +788,31 @@ GET /health
 
 A healthy application reports that the database is available.
 
+## Deployment
+
+The application can be deployed as a single FastAPI web service. The current
+deployment model uses Render with the FastAPI application serving both the API
+and the static frontend/Admin Panel.
+
+Typical Render configuration:
+
+- Runtime: Python
+- Build command: `pip install -r requirements.txt`
+- Start command:
+  `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Source branch: deployment branch such as `main`
+- Environment variables: Databricks, PostgreSQL, authentication, cookie, and
+  Genie execution settings
+
+The same application service exposes:
+
+- the main chat interface at `/`
+- the Admin Panel at `/admin`
+- FastAPI API endpoints under `/api/...`
+
+Production secrets should be configured through the deployment platform's
+environment-variable/secret mechanism rather than committed to the repository.
+
 ## Production Considerations
 
 ### HTTPS
@@ -834,6 +919,29 @@ Databricks owns Genie conversations and analytical execution.
 This separation keeps application state independent from the underlying
 analytics platform.
 
+## Current Application-Level Features
+
+Beyond the Genie analytical engine, the application currently provides:
+
+- authenticated multi-user access
+- administrator user creation and account-status management
+- password reset by the administrator
+- persistent PostgreSQL-backed chat history
+- conversation switching and deletion
+- Agent-mode conversation continuation
+- compatibility recovery for legacy Genie conversation IDs
+- native Genie visualization retrieval
+- query-result table rendering
+- query-result downloads
+- suggested questions and follow-up prompts
+- responsive desktop/mobile chat UI
+- mobile conversation-sidebar toggle
+- direct Chat ↔ Admin Panel navigation
+- CSRF protection
+- login and chat rate limiting
+- server-side Databricks OAuth credentials
+- health checking and application/database status reporting
+
 ## Limitations
 
 The application depends on the capabilities and configuration of the
@@ -862,9 +970,9 @@ definitions.
 
 Potential extensions include:
 
--   role-based access control
+-   fine-grained role-based access control
 -   multiple Genie Agents / Genie Spaces
--   organization-level user management
+-   organization-level / tenant-level user management
 -   audit logging
 -   richer observability
 -   streaming Agent responses
