@@ -37,6 +37,30 @@ class AuthService:
         await db.execute(
             f"""
             CREATE TABLE IF NOT EXISTS
+            "{settings.postgres_schema}".users (
+                username TEXT PRIMARY KEY,
+                password_hash TEXT NOT NULL,
+                is_active BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+        )
+
+        # Preserve the existing single-user configuration by migrating
+        # the configured application account into the users table.
+        await db.execute(
+            f"""
+            INSERT INTO "{settings.postgres_schema}".users
+                (username, password_hash)
+            VALUES (%s, %s)
+            ON CONFLICT (username) DO NOTHING
+            """,
+            (settings.app_username, settings.app_password_hash),
+        )
+
+        await db.execute(
+            f"""
+            CREATE TABLE IF NOT EXISTS
             "{settings.postgres_schema}".auth_sessions (
                 session_id TEXT PRIMARY KEY,
                 token_hash TEXT NOT NULL UNIQUE,
@@ -78,41 +102,31 @@ class AuthService:
             token.encode("utf-8")
         ).hexdigest()
 
-    def authenticate(
+    async def authenticate(
         self,
         username: str,
         password: str,
     ) -> bool:
-        """
-        Authenticate against the configured application credentials.
+        """Authenticate against the PostgreSQL users table."""
 
-        Username:
-            Compared using constant-time comparison.
-
-        Password:
-            Verified against the configured Argon2id password hash.
-
-        Returns:
-            True when credentials are valid, otherwise False.
-        """
-
-        username_valid = secrets.compare_digest(
-            username,
-            settings.app_username,
+        row = await db.fetch_one(
+            f"""
+            SELECT password_hash, is_active
+            FROM "{settings.postgres_schema}".users
+            WHERE username = %s
+            """,
+            (username,),
         )
 
-        if not username_valid:
+        if row is None or not row["is_active"]:
             return False
 
         try:
             return self.password_hash.verify(
+                row["password_hash"],
                 password,
-                settings.app_password_hash,
             )
-
         except Exception:
-            # A malformed hash/configuration must never result
-            # in successful authentication.
             return False
 
     async def create_session(
