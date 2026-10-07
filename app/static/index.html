@@ -802,21 +802,103 @@
            MOBILE
            ===================================================== */
 
+        .mobile-sidebar-toggle,
+        .sidebar-overlay {
+            display: none;
+        }
+
         @media (max-width: 700px) {
+            .mobile-sidebar-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 38px;
+                height: 38px;
+                margin-right: 10px;
+                flex-shrink: 0;
+                border: 1px solid #d1d5db;
+                border-radius: 9px;
+                background: white;
+                color: #111827;
+                cursor: pointer;
+                font-size: 20px;
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 999;
+                display: block;
+                background: rgba(0, 0, 0, 0.38);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease;
+            }
 
             .sidebar {
-                width: 230px;
+                width: min(290px, 82vw);
+                z-index: 1000;
+                transform: translateX(-100%);
+                transition: transform 0.22s ease;
+                box-shadow: 8px 0 24px rgba(0, 0, 0, 0.16);
+            }
+
+            .app.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .app.sidebar-open .sidebar-overlay {
+                opacity: 1;
+                pointer-events: auto;
             }
 
             .main-area {
-                margin-left: 230px;
-                width: calc(100% - 230px);
+                margin-left: 0;
+                width: 100%;
+                min-width: 0;
+            }
+
+            .header {
+                padding: 0 12px;
+            }
+
+            .header > div:first-child {
+                display: flex;
+                align-items: center;
+                min-width: 0;
+            }
+
+            .header-title,
+            .header-subtitle {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .main {
+                max-width: none;
+                padding: 18px 12px 14px;
             }
 
             .message {
-                max-width: 90%;
+                max-width: 94%;
             }
 
+            .composer {
+                width: 100%;
+                gap: 6px;
+                padding: 8px;
+            }
+
+            .composer textarea {
+                min-width: 0;
+                min-height: 46px;
+                font-size: 16px;
+            }
+
+            .welcome h1 {
+                font-size: 25px;
+            }
         }
 
 
@@ -1179,6 +1261,12 @@
 
     </aside>
 
+    <div
+        id="sidebarOverlay"
+        class="sidebar-overlay"
+        aria-hidden="true"
+    ></div>
+
 
     <!-- =====================================================
          MAIN AREA
@@ -1190,6 +1278,14 @@
         <header class="header">
 
             <div>
+
+                <button
+                    id="mobileSidebarToggle"
+                    class="mobile-sidebar-toggle"
+                    type="button"
+                    aria-label="Open conversations"
+                    aria-expanded="false"
+                >☰</button>
 
                 <div
                     id="headerTitle"
@@ -1371,6 +1467,50 @@
         document.getElementById(
             "sendButton"
         );
+
+    const mobileSidebarToggle =
+        document.getElementById("mobileSidebarToggle");
+
+    const sidebarOverlay =
+        document.getElementById("sidebarOverlay");
+
+    function isMobileLayout() {
+        return window.matchMedia("(max-width: 700px)").matches;
+    }
+
+    function setSidebarOpen(open) {
+        if (!isMobileLayout()) return;
+        chatScreen.classList.toggle("sidebar-open", open);
+        mobileSidebarToggle?.setAttribute(
+            "aria-expanded",
+            open ? "true" : "false"
+        );
+        mobileSidebarToggle?.setAttribute(
+            "aria-label",
+            open ? "Close conversations" : "Open conversations"
+        );
+        if (mobileSidebarToggle) {
+            mobileSidebarToggle.textContent = open ? "×" : "☰";
+        }
+    }
+
+    mobileSidebarToggle?.addEventListener("click", () => {
+        setSidebarOpen(!chatScreen.classList.contains("sidebar-open"));
+    });
+
+    sidebarOverlay?.addEventListener("click", () => {
+        setSidebarOpen(false);
+    });
+
+    window.addEventListener("resize", () => {
+        if (!isMobileLayout()) {
+            chatScreen.classList.remove("sidebar-open");
+            if (mobileSidebarToggle) {
+                mobileSidebarToggle.textContent = "☰";
+                mobileSidebarToggle.setAttribute("aria-expanded", "false");
+            }
+        }
+    });
 
 
     // =========================================================
@@ -2165,7 +2305,34 @@
 
 
     // Add CSV/Excel buttons above every markdown table in the report text.
-    function enhanceMarkdownTables(root) {
+    // Draw a native chart for a Markdown table in the report text.
+    function buildInlineChartCard(columns, rows, title) {
+
+        if (typeof Chart === "undefined") return null;
+
+        const table = { title, columns, rows };
+        if (!isChartworthy(table)) return null;
+
+        const spec = buildChartSpec(table, { title });
+        if (!spec) return null;
+
+        const card = document.createElement("div");
+        card.className = "result-card visualization-card";
+
+        const header = document.createElement("div");
+        header.className = "result-header";
+        const heading = document.createElement("div");
+        heading.className = "result-title";
+        heading.textContent = title;
+        header.appendChild(heading);
+        card.appendChild(header);
+        card.appendChild(renderNativeChart(spec));
+
+        return card;
+    }
+
+
+    function enhanceMarkdownTables(root, drawCharts = false) {
 
         root.querySelectorAll(".md-table-wrap").forEach((wrap, index) => {
 
@@ -2189,6 +2356,23 @@
             ).forEach((button) => bar.appendChild(button));
 
             wrap.parentNode.insertBefore(bar, wrap);
+
+            // No chart came from the API: chart this report table instead.
+            if (drawCharts) {
+                let heading = wrap.previousElementSibling;
+                while (heading && heading.classList.contains("md-table-actions")) {
+                    heading = heading.previousElementSibling;
+                }
+                const title = heading && /^H[1-6]$/.test(heading.tagName)
+                    ? heading.textContent.trim()
+                    : `Chart ${index + 1}`;
+
+                const card = buildInlineChartCard(columns, rows, title);
+                if (card) {
+                    card.style.margin = "8px 0 12px";
+                    bar.parentNode.insertBefore(card, bar);
+                }
+            }
         });
     }
 
@@ -2379,6 +2563,27 @@
 
     function findSourceTable(visualization, tables) {
 
+        // Agent-mode charts reference the SQL call that produced the data.
+        if (visualization.source_call_id) {
+            const wantedId = normalizeSourceId(
+                `${visualization.source_call_id}_output`
+            );
+            const byCall = tables.find(
+                (table) => normalizeSourceId(table.attachment_id) === wantedId
+            );
+            if (byCall) return byCall;
+        }
+
+        if (visualization.origin === "agent" || visualization.auto) {
+            const wantedTitle = String(visualization.title || "")
+                .trim().toLowerCase();
+            const byTitle = tables.find(
+                (table) =>
+                    String(table.title || "").trim().toLowerCase() === wantedTitle
+            );
+            if (byTitle) return byTitle;
+        }
+
         const ids = [
             visualization.query_attachment_id,
             visualization.attachment_id,
@@ -2437,6 +2642,40 @@
     }
 
 
+    // Agent query results arrive as Markdown text, so numbers often look
+    // like "1,23,456", "₹4,500.50" or "12.5%". Parse them for charting.
+    function chartNum(value) {
+
+        if (value === null || value === undefined || value === "") return null;
+
+        if (typeof value === "number") {
+            return Number.isFinite(value) ? value : null;
+        }
+
+        let text = String(value).trim();
+        if (!text || text === "—" || text === "-") return null;
+
+        let negative = false;
+        if (/^\(.*\)$/.test(text)) {
+            negative = true;
+            text = text.slice(1, -1);
+        }
+
+        text = text
+            .replace(/[₹$€£%]/g, "")
+            .replace(/,/g, "")
+            .replace(/\s+/g, "")
+            .replace(/(cr|crore|l|lakh|k)$/i, "");
+
+        if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(text)) {
+            return null;
+        }
+
+        const number = Number(text);
+        return Number.isFinite(number) ? (negative ? -number : number) : null;
+    }
+
+
     // Build a chart from the REAL query result that Genie produced.
     function buildChartSpec(table, visualization) {
 
@@ -2450,7 +2689,7 @@
             const values = rows
                 .map((row) => row[c])
                 .filter((v) => v !== null && v !== undefined && v !== "");
-            if (values.length && values.every(isNumericValue)) {
+            if (values.length && values.every((v) => chartNum(v) !== null)) {
                 numericColumns.push(c);
             }
         }
@@ -2498,6 +2737,14 @@
             (c) => titleGroups.includes(seriesGroup(columns[c]))
         );
 
+        // Explicit hint from the Genie agent's chart definition.
+        if (!preferred.length && Array.isArray(visualization.y_fields)) {
+            const wanted = visualization.y_fields.map(normalizeColumnName);
+            preferred = numericColumns.filter(
+                (c) => wanted.includes(normalizeColumnName(columns[c]))
+            );
+        }
+
         // Otherwise show every numeric column of the same kind as the first
         // one (e.g. actual / prediction / bounds).
         if (!preferred.length) {
@@ -2519,7 +2766,7 @@
             kind: columnKind(columns[c]),
             hidden: !preferredSet.has(c),
             data: rows.map((row) =>
-                isNumericValue(row[c]) ? Number(row[c]) : null
+                chartNum(row[c])
             ),
         }));
 
@@ -2621,13 +2868,15 @@
         const actions = document.createElement("div");
         actions.className = "result-actions";
 
-        const open = document.createElement("a");
-        open.className = "result-button";
-        open.href = visualization.image_url || "#";
-        open.target = "_blank";
-        open.rel = "noopener";
-        open.textContent = "Open image";
-        actions.appendChild(open);
+        if (visualization.image_url) {
+            const open = document.createElement("a");
+            open.className = "result-button";
+            open.href = visualization.image_url;
+            open.target = "_blank";
+            open.rel = "noopener";
+            open.textContent = "Open image";
+            actions.appendChild(open);
+        }
 
         header.appendChild(title);
         header.appendChild(actions);
@@ -2650,6 +2899,7 @@
 
                     const data = document.createElement("details");
                     data.className = "chart-data";
+                    data.open = true;
                     const dataSummary = document.createElement("summary");
                     dataSummary.textContent = "View data";
                     data.appendChild(dataSummary);
@@ -2682,7 +2932,26 @@
             card.appendChild(image);
         }
 
+        // Nothing drawable (no data match and no image): show nothing.
+        if (!rendered && !visualization.image_url) {
+            return null;
+        }
+
         return card;
+    }
+
+
+    // Does this table deserve an automatic chart?
+    function isChartworthy(table) {
+
+        if (!table || table.error) return false;
+
+        const rows = table.rows || [];
+        const columns = table.columns || [];
+
+        if (columns.length < 2 || rows.length < 2) return false;
+
+        return buildChartSpec(table, { title: table.title }) !== null;
     }
 
 
@@ -2745,9 +3014,33 @@
 
         visualizations.forEach((visualization) => {
             const card = renderVisualization(visualization, tables);
+            if (!card) return;
             parts.after.push(card);
             if (card.__sourceTable) {
                 chartSources.add(card.__sourceTable.attachment_id);
+            }
+        });
+
+        // Genie Agent shows a chart next to every meaningful result. When
+        // the API did not hand us an explicit chart for a query result,
+        // draw one by default from that same result (data table included).
+        tables.forEach((table) => {
+            if (chartSources.has(table.attachment_id)) return;
+            if (!isChartworthy(table)) return;
+
+            const card = renderVisualization(
+                {
+                    title: table.title || "Chart",
+                    attachment_id: table.attachment_id,
+                    query_attachment_id: table.attachment_id,
+                    auto: true,
+                },
+                [table]
+            );
+
+            if (card) {
+                parts.after.push(card);
+                chartSources.add(table.attachment_id);
             }
         });
 
@@ -2805,7 +3098,11 @@
             const answer = document.createElement("div");
             answer.className = "answer-text";
             answer.innerHTML = renderMarkdown(content);
-            enhanceMarkdownTables(answer);
+            const hasChartCards = parts.after.some(
+                (node) => node.classList
+                    && node.classList.contains("visualization-card")
+            );
+            enhanceMarkdownTables(answer, !hasChartCards);
             stack.appendChild(answer);
 
             parts.after.forEach((node) => stack.appendChild(node));
