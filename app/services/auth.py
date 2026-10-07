@@ -17,15 +17,13 @@ class AuthError(Exception):
 class AuthService:
 
     def __init__(self) -> None:
-        # PasswordHash.recommended() currently provides a secure
-        # password hashing configuration, including Argon2id when
-        # the required backend is available.
+        # PasswordHash.recommended() provides a secure password hashing
+        # configuration, including Argon2id when the required backend
+        # is available.
         self.password_hash = PasswordHash.recommended()
 
     async def initialize(self) -> None:
-        """
-        Create the authentication database objects if they do not exist.
-        """
+        """Create authentication database objects if they do not exist."""
 
         await db.execute(
             f"""
@@ -41,13 +39,13 @@ class AuthService:
                 username TEXT PRIMARY KEY,
                 password_hash TEXT NOT NULL,
                 is_active BOOLEAN NOT NULL DEFAULT TRUE,
-                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
             """
         )
 
-        # Preserve the existing single-user configuration by migrating
-        # the configured application account into the users table.
+        # Preserve the existing configured application account.
         await db.execute(
             f"""
             INSERT INTO "{settings.postgres_schema}".users
@@ -55,7 +53,10 @@ class AuthService:
             VALUES (%s, %s)
             ON CONFLICT (username) DO NOTHING
             """,
-            (settings.app_username, settings.app_password_hash),
+            (
+                settings.app_username,
+                settings.app_password_hash,
+            ),
         )
 
         await db.execute(
@@ -91,13 +92,7 @@ class AuthService:
 
     @staticmethod
     def _hash_token(token: str) -> str:
-        """
-        Hash the browser session token before storing it in PostgreSQL.
-
-        The plaintext token is only given to the browser through the
-        HttpOnly cookie. PostgreSQL stores only its SHA-256 digest.
-        """
-
+        """Hash the browser session token before storing it."""
         return hashlib.sha256(
             token.encode("utf-8")
         ).hexdigest()
@@ -107,13 +102,21 @@ class AuthService:
         username: str,
         password: str,
     ) -> bool:
-        """Authenticate against the PostgreSQL users table."""
+        """Authenticate a user against the PostgreSQL users table."""
+
+        if not username or not password:
+            return False
 
         row = await db.fetch_one(
             f"""
-            SELECT password_hash, is_active
-            FROM "{settings.postgres_schema}".users
-            WHERE username = %s
+            SELECT
+                password_hash,
+                is_active
+            FROM
+                "{settings.postgres_schema}".users
+            WHERE
+                username = %s
+            LIMIT 1
             """,
             (username,),
         )
@@ -122,27 +125,176 @@ class AuthService:
             return False
 
         try:
+            # pwdlib.verify() expects plaintext password first,
+            # followed by the stored password hash.
             return self.password_hash.verify(
-                row["password_hash"],
                 password,
+                row["password_hash"],
             )
         except Exception:
             return False
+
+    async def create_user(
+        self,
+        username: str,
+        password: str,
+    ) -> bool:
+        """
+        Create a new active user.
+
+        Returns True when created and False when the username already exists.
+        """
+
+        username = username.strip()
+
+        if not username or not password:
+            raise ValueError("Username and password are required.")
+
+        password_hash = self.password_hash.hash(password)
+
+        try:
+            await db.execute(
+                f"""
+                INSERT INTO "{settings.postgres_schema}".users
+                    (
+                        username,
+                        password_hash,
+                        is_active
+                    )
+                VALUES (%s, %s, TRUE)
+                """,
+                (
+                    username,
+                    password_hash,
+                ),
+            )
+            return True
+
+        except Exception as exc:
+            # PostgreSQL duplicate-key errors are intentionally translated
+            # into a clean False result for the admin API.
+            if "duplicate key" in str(exc).lower() or "unique" in str(exc).lower():
+                return False
+            raise
+
+    async def list_users(self) -> list[dict]:
+        """Return users for the administrator interface."""
+
+        rows = await db.fetch_all(
+            f"""
+            SELECT
+                username,
+                is_active,
+                created_at,
+                updated_at
+            FROM
+                "{settings.postgres_schema}".users
+            ORDER BY
+                username ASC
+            """
+        )
+
+        return [
+            {
+                "username": row["username"],
+                "is_active": row["is_active"],
+                "created_at": row["created_at"].isoformat(),
+                "updated_at": row["updated_at"].isoformat(),
+            }
+            for row in rows
+        ]
+
+    async def set_user_active(
+        self,
+        username: str,
+        is_active: bool,
+    ) -> bool:
+        """Activate or deactivate a user."""
+
+        username = username.strip()
+
+        if username == settings.app_username and not is_active:
+            raise ValueError("The administrator account cannot be deactivated.")
+
+        result = await db.execute(
+            f"""
+            UPDATE
+                "{settings.postgres_schema}".users
+            SET
+                is_active = %s,
+                updated_at = NOW()
+            WHERE
+                username = %s
+            """,
+            (
+                is_active,
+                username,
+            ),
+        )
+
+        # The database service returns the underlying cursor result in the
+        # current application, so existence is checked explicitly as well.
+        row = await db.fetch_one(
+            f"""
+            SELECT username
+            FROM "{settings.postgres_schema}".users
+            WHERE username = %s
+            """,
+            (username,),
+        )
+
+        return row is not None
+
+    async def reset_password(
+        self,
+        username: str,
+        new_password: str,
+    ) -> bool:
+        """Set a new password for an existing user."""
+
+        username = username.strip()
+
+        if not new_password:
+            raise ValueError("Password is required.")
+
+        password_hash = self.password_hash.hash(new_password)
+
+        await db.execute(
+            f"""
+            UPDATE
+                "{settings.postgres_schema}".users
+            SET
+                password_hash = %s,
+                updated_at = NOW(),
+                is_active = TRUE
+            WHERE
+                username = %s
+            """,
+            (
+                password_hash,
+                username,
+            ),
+        )
+
+        row = await db.fetch_one(
+            f"""
+            SELECT username
+            FROM "{settings.postgres_schema}".users
+            WHERE username = %s
+            """,
+            (username,),
+        )
+
+        return row is not None
 
     async def create_session(
         self,
         username: str,
     ) -> str:
-        """
-        Create a new authenticated browser session.
-
-        Only the SHA-256 hash of the session token is persisted.
-        """
+        """Create a new authenticated browser session."""
 
         session_id = str(uuid.uuid4())
-
         token = secrets.token_urlsafe(48)
-
         token_hash = self._hash_token(token)
 
         now = datetime.now(timezone.utc)
@@ -182,13 +334,7 @@ class AuthService:
         self,
         token: str,
     ) -> Optional[str]:
-        """
-        Validate an authentication session token.
-
-        Returns:
-            Username associated with the valid session,
-            or None when the session is invalid/expired.
-        """
+        """Validate a browser session and return its username."""
 
         if not token:
             return None
@@ -223,9 +369,7 @@ class AuthService:
         self,
         token: str,
     ) -> None:
-        """
-        Delete an authenticated browser session.
-        """
+        """Delete an authenticated browser session."""
 
         if not token:
             return
@@ -245,12 +389,7 @@ class AuthService:
     async def cleanup_expired_sessions(
         self,
     ) -> None:
-        """
-        Remove expired authentication sessions.
-
-        This can later be called periodically by a background
-        cleanup task or scheduled maintenance job.
-        """
+        """Remove expired authentication sessions."""
 
         await db.execute(
             f"""
