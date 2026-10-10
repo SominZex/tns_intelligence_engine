@@ -1082,7 +1082,53 @@
         .thought-table {
             margin-bottom: 10px;
         }
-
+    
+    /* =====================================================
+       MOBILE FIXES: sticky header + reachable sidebar footer
+       ===================================================== */
+    @media (max-width: 700px) {
+    
+        /* Header (with the ☰ button) stays visible while scrolling */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;   /* below overlay (999) and sidebar (1000) */
+        }
+    
+        /* Use the real visible viewport height so the footer isn't hidden
+           under the browser's address/navigation bar */
+        .sidebar {
+            height: 100vh;    /* fallback for older browsers */
+            height: 100dvh;   /* actual visible height on mobile */
+            overflow: hidden;
+        }
+    
+        /* Only the conversation list scrolls; header and footer stay pinned */
+        .chat-list {
+            min-height: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+    
+        .sidebar-header,
+        .history-title {
+            flex-shrink: 0;
+        }
+    
+        /* Keep Admin Panel / Logout always visible, clear of the home bar */
+        .sidebar-footer {
+            flex-shrink: 0;
+            padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        }
+    
+        /* Stop the page behind from scrolling while the sidebar is open */
+        .app.sidebar-open {
+            overflow: hidden;
+        }
+        body:has(.app.sidebar-open) {
+            overflow: hidden;
+        }
+    }
+        
     </style>
 
     <!-- Chart.js renders the charts natively. If this CDN is unreachable
