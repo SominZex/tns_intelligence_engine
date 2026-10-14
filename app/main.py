@@ -111,7 +111,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Databricks Genie Chatbot",
+    title="TNS Cognitive Docs",
     version="1.0.0",
     lifespan=lifespan,
 )
